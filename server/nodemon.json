@@ -1,0 +1,6 @@
+{
+  "watch": ["src", "../packages/shared/src"],
+  "ext": "ts",
+  "legacyWatch": true,
+  "exec": "node -r ts-node/register/transpile-only -r tsconfig-paths/register src/main.ts"
+}

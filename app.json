@@ -1,41 +1,65 @@
 {
   "expo": {
-    "name": "glucobuddy",
-    "slug": "glucobuddy",
+    "name": "Sugar Saathi",
+    "slug": "sugarsaathi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "glucobuddy",
+    "scheme": "sugarsaathi",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.sugarsaathi.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "whatsapp"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.sugarsaathi.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#14794F",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": [
+        "android.permission.ACTIVITY_RECOGNITION"
+      ],
       "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "output": "server",
-      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#14794F",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 160
         }
-      ]
+      ],
+      "expo-sharing",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Sugar Saathi uses the microphone so you can say what you ate.",
+          "speechRecognitionPermission": "Sugar Saathi turns your voice into a meal log."
+        }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Sugar Saathi counts your steps to track your daily walk."
+        }
+      ],
+      "expo-notifications",
+      "expo-font",
+      "@sentry/react-native"
     ],
     "experiments": {
-      "typedRoutes": true,
+      "typedRoutes": false,
       "reactCompiler": true
     }
   }

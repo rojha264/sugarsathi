@@ -1,0 +1,86 @@
+# GlucoBuddy local stack: `docker compose up`
+#   API      http://localhost:4000  (Swagger: /docs)
+#   Admin    http://localhost:5173  (separate React project in ./admin)
+#   Adminer  http://localhost:8080  (server: db, user/pass/db: glucobuddy)
+#   Postgres localhost:5432
+# The mobile app (Metro) points at the API via EXPO_PUBLIC_API_URL.
+#
+# Corporate TLS proxies (e.g. Zscaler): put the root CA in certs/extra-ca.pem (see scripts/dev-certs.sh).
+
+x-node: &node
+  image: node:22-alpine
+  environment: &node-env
+    NODE_EXTRA_CA_CERTS: /workspace/certs/extra-ca.pem
+  volumes:
+    - ./:/workspace
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: glucobuddy
+      POSTGRES_PASSWORD: glucobuddy
+      POSTGRES_DB: glucobuddy
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glucobuddy"]
+      interval: 3s
+      retries: 20
+
+  api:
+    <<: *node
+    working_dir: /workspace/server
+    environment:
+      <<: *node-env
+      DATABASE_URL: postgresql://glucobuddy:glucobuddy@db:5432/glucobuddy
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      PORT: "4000"
+      # dev = no SMS, every number uses DEV_OTP_CODE; msg91 = real SMS (needs MSG91_* keys).
+      OTP_MODE: ${OTP_MODE:-dev}
+      DEV_OTP_CODE: ${DEV_OTP_CODE:-123456}
+      DEV_TEST_PHONES: ${DEV_TEST_PHONES:-+9190000*,+9191000*,+919876543210}
+      MSG91_AUTH_KEY: ${MSG91_AUTH_KEY:-}
+      MSG91_TEMPLATE_ID: ${MSG91_TEMPLATE_ID:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      AUTO_ASSIGN: ${AUTO_ASSIGN:-on}
+    # Linux node_modules live in a volume so they never clash with the host's.
+    volumes:
+      - ./:/workspace
+      - api_node_modules:/workspace/server/node_modules
+    command: >
+      sh -c "sed -i 's/https/http/' /etc/apk/repositories && apk add --no-cache openssl > /dev/null &&
+             npm ci --no-audit --no-fund &&
+             npx prisma generate && npx prisma migrate deploy && npx tsx prisma/seed.ts --if-empty &&
+             npm run dev"
+    ports: ["4000:4000"]
+    depends_on:
+      db: { condition: service_healthy }
+
+  admin:
+    <<: *node
+    working_dir: /workspace/admin
+    environment:
+      <<: *node-env
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:4000}
+      VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+      # File events from the Mac do not always reach the container; poll so edits show up.
+      VITE_POLL: '1'
+    volumes:
+      - ./admin:/workspace/admin
+      - ./packages:/workspace/packages
+      - ./certs:/workspace/certs
+      - admin_node_modules:/workspace/admin/node_modules
+    command: sh -c "npm ci --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5173"
+    ports: ["5173:5173"]
+    depends_on: [api]
+
+  adminer:
+    image: adminer:latest
+    ports: ["8080:8080"]
+    depends_on: [db]
+
+volumes:
+  pgdata:
+  api_node_modules:
+  admin_node_modules:

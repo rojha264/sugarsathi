@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+.git
+android
+ios
+.expo
+admin/test-results
+admin/playwright-report
+server/prisma/dump.sql
+*.log
+.env
+.env.*

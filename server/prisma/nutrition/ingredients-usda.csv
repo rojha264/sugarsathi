@@ -1,0 +1,37 @@
+code,id,nameEn,nameHiLatin,group,carb,protein,fat,fiber,sugar,sodium,water
+USDA:171284,curd,"Yogurt, plain, whole milk",Dahi,USDA FoodData Central,4.66,3.47,3.25,0,4.66,46,87.9
+USDA:173410,butter,"Butter, salted",Makkhan,USDA FoodData Central,0.06,0.85,81.11,0,0.06,643,16.17
+USDA:169655,sugar,"Sugars, granulated",Cheeni,USDA FoodData Central,99.98,0,0,0,99.8,1,0.02
+USDA:173468,salt,"Salt, table",Namak,USDA FoodData Central,0,0,0,0,0,38758,0.2
+USDA:174924,bread,"Bread, white, commercially prepared (includes soft bread crumbs)",Bread,USDA FoodData Central,46.72,8.85,3.33,2.7,5.67,490,36.42
+USDA:172688,brownbread,"Bread, whole-wheat, commercially prepared",Brown bread,USDA FoodData Central,36.71,12.45,3.5,6,4.34,455,39.01
+USDA:172796,pav,"Rolls, hamburger or hotdog, plain",Pav,USDA FoodData Central,48.32,9.77,3.91,1.8,7.28,494,34.34
+USDA:173904,oats,"Cereals, oats, regular and quick, not fortified, dry",Oats,USDA FoodData Central,57.6,13.15,6.52,10.1,0.99,6,10.84
+USDA:174648,cornflakes,"Cereals ready-to-eat, RALSTON Corn Flakes",Cornflakes,USDA FoodData Central,85.31,5.9,0.91,2.7,7.84,571,3.31
+USDA:170853,cheese,"Cheese, pasteurized process, American, fortified with vitamin D",Cheese,USDA FoodData Central,4.78,18.13,30.71,0,2.26,1671,39.61
+USDA:170859,cream,"Cream, fluid, heavy whipping",Malai,USDA FoodData Central,2.84,2.84,36.08,0,2.92,27,57.71
+USDA:169640,honey,Honey,Shahad,USDA FoodData Central,82.2,0.3,0,0.2,82.12,4,17.1
+USDA:171275,condensedmilk,"Milk, canned, condensed, sweetened",Condensed milk,USDA FoodData Central,54.4,7.91,8.7,0,54.4,127,27.16
+USDA:167587,chocolate,"Candies, milk chocolate",Chocolate,USDA FoodData Central,56,7.65,29.66,3.4,51.5,79,1.5
+USDA:168556,ketchup,Catsup,Ketchup,USDA FoodData Central,27.1,1.04,0.1,0.3,21.27,907,68.51
+USDA:171009,mayonnaise,"Salad dressing, mayonnaise, regular",Mayonnaise,USDA FoodData Central,0.57,0.96,74.85,0,0.57,635,21.65
+USDA:174277,soysauce,Soy sauce made from soy and wheat (shoyu),Soy sauce,USDA FoodData Central,4.13,8.14,0.57,0.8,0.4,5493,71.15
+USDA:170173,coconutmilk,"Nuts, coconut milk, canned (liquid expressed from grated meat and water)",Nariyal doodh,USDA FoodData Central,2.81,2.02,21.33,0,0,13,72.88
+USDA:174275,soychunks,"Soy flour, defatted",Soya chunks,USDA FoodData Central,16.42,51.46,1.22,17.5,16.42,20,7.25
+USDA:172470,peanutbutter,"Peanut butter, smooth style, without salt",Peanut butter,USDA FoodData Central,17.31,22.21,51.36,5,10.49,17,1.23
+USDA:168927,pasta,"Pasta, dry, unenriched",Pasta,USDA FoodData Central,71.47,13.04,1.51,3.2,2.67,6,9.9
+USDA:169698,cornstarch,Cornstarch,Cornflour,USDA FoodData Central,90.37,0.26,0.05,0.9,0,9,8.32
+USDA:174950,biscuit,"Cookies, butter, commercially prepared, enriched",Biscuit,USDA FoodData Central,68.1,6.1,18.8,0.8,20.24,282,4.6
+USDA:174852,cola,"Beverages, carbonated, cola, regular",Cola,USDA FoodData Central,10.36,0,0.25,0,9.94,3,89.36
+USDA:173227,tea,"Beverages, tea, black, brewed, prepared with tap water",Chai patti,USDA FoodData Central,0.3,0,0,0,0,3,99.7
+USDA:171890,coffee,"Beverages, coffee, brewed, prepared with tap water",Coffee,USDA FoodData Central,0,0.12,0.02,0,0,2,99.39
+USDA:167575,icecream,"Ice creams, vanilla",Ice cream,USDA FoodData Central,22.9,3.5,11,0.7,21.22,80,61
+USDA:169609,custardpowder,"Puddings, vanilla, dry mix, regular",Custard powder,USDA FoodData Central,92.9,0.3,0.4,0.6,79.34,613,3.9
+USDA:172237,vinegar,"Vinegar, distilled",Sirka,USDA FoodData Central,0.04,0,0,0,0.04,2,94.78
+USDA:174288,besan,Chickpea flour (besan),Besan,USDA FoodData Central,47.02,22.39,6.69,10.8,10.85,64,10.28
+USDA:169714,riceflour,"Rice flour, white, unenriched",Chawal ka atta,USDA FoodData Central,77.73,5.95,1.42,2.4,0.12,0,11.89
+USDA:169717,sabudana,"Tapioca, pearl, dry",Sabudana,USDA FoodData Central,87.79,0.19,0.02,0.9,3.35,1,10.99
+USDA:173756,kabulichana,"Chickpeas (garbanzo beans, bengal gram), mature seeds, raw",Kabuli chana,USDA FoodData Central,50.75,20.47,6.04,12.2,10.7,24,7.68
+USDA:170465,turnip,"Turnips, raw",Shalgam,USDA FoodData Central,4.63,0.9,0.1,1.8,3.8,67,91.87
+USDA:170687,kuttu,"Buckwheat flour, whole-groat",Kuttu atta,USDA FoodData Central,60.59,12.62,3.1,10,2.6,11,11.15
+USDA:168106,papad,Papad,Papad,USDA FoodData Central,41.27,25.56,3.25,18.6,0,1745,3.49

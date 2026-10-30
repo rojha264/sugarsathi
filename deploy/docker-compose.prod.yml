@@ -1,0 +1,80 @@
+# GlucoBuddy on one server (VPS): Postgres + API + admin panel + Caddy (automatic HTTPS) + daily backups.
+#   cp deploy/.env.production.example deploy/.env    # fill in every value
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
+# First time only, load the food catalog and the owner login:
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env exec api npm run db:seed:production
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: glucobuddy
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: glucobuddy
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glucobuddy"]
+      interval: 5s
+      retries: 20
+    # No published port: only the API can reach the database.
+
+  api:
+    build: { context: .., dockerfile: server/Dockerfile }
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://glucobuddy:${POSTGRES_PASSWORD}@db:5432/glucobuddy
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      CORS_ORIGINS: https://${ADMIN_DOMAIN}
+      OTP_MODE: msg91
+      MSG91_AUTH_KEY: ${MSG91_AUTH_KEY:?set MSG91_AUTH_KEY}
+      MSG91_TEMPLATE_ID: ${MSG91_TEMPLATE_ID:?set MSG91_TEMPLATE_ID}
+      # Numbers that sign in with 123456 without SMS: give one to Apple / Google reviewers.
+      DEV_TEST_PHONES: ${REVIEWER_PHONES:-}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      AUTO_ASSIGN: ${AUTO_ASSIGN:-on}
+      OWNER_EMAIL: ${OWNER_EMAIL:-}
+      OWNER_PASSWORD: ${OWNER_PASSWORD:-}
+      OWNER_NAME: ${OWNER_NAME:-Owner}
+    depends_on:
+      db: { condition: service_healthy }
+
+  admin:
+    build:
+      context: ..
+      dockerfile: admin/Dockerfile
+      args:
+        VITE_API_URL: https://${API_DOMAIN}
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:?set ADMIN_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [api, admin]
+
+  # Nightly database dump at 02:30 IST, kept 14 days (copy ./backups off the server too).
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Asia/Kolkata
+    volumes: [./backups:/backups]
+    entrypoint: >
+      sh -c 'echo "30 2 * * * pg_dump -h db -U glucobuddy glucobuddy | gzip > /backups/glucobuddy-\$$(date +\%F).sql.gz && find /backups -name \"*.sql.gz\" -mtime +14 -delete" | crontab - && crond -f'
+    depends_on: [db]
+
+volumes:
+  pgdata:
+  caddy_data:

@@ -1,0 +1,894 @@
+// GlucoBuddy database. Users log from the app (offline-first, client ids);
+// dietitians and the owner manage everything through the admin panel. Both only via the API.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  DIETITIAN
+  OWNER
+}
+
+enum Tier {
+  FREE
+  BASIC
+  PRO
+}
+
+// ---------- Identity ----------
+
+model User {
+  id           String    @id @default(uuid())
+  phone        String?   @unique
+  email        String?   @unique
+  passwordHash String?
+  name         String    @default("")
+  role         Role      @default(USER)
+  lang         String    @default("en")
+  active       Boolean   @default(true)
+  /// Last authenticated request; "online" when within the last 2 minutes.
+  lastActiveAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  patient              Patient?
+  chatSent             ChatMessage[]
+  assigned             Patient[]             @relation("AssignedDietitian")
+  refreshTokens        RefreshToken[]
+  devices              Device[]
+  receipts             NotificationReceipt[]
+  sentNotices          Notification[]
+  notesWritten         DietitianNote[]
+  plansWritten         DietPlan[]
+  exercisePlansWritten ExercisePlan[]
+  following            CircleMember[]
+  familySent           FamilyMessage[]
+  audit                AuditLog[]
+  installs             AppInstall[]
+  foodPicks            FoodPick[]
+  events               AppEvent[]
+  sessions             AppSession[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model OtpRequest {
+  id        String    @id @default(uuid())
+  phone     String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([phone, createdAt])
+}
+
+// ---------- Patient ----------
+
+model Patient {
+  userId              String    @id
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type                String    @default("type2") // type2 | type1 | gdm | pre | care
+  ageGroup            String    @default("adult") // child | adult | senior
+  sex                 String?
+  dob                 DateTime?
+  heightCm            Int?
+  weightKg            Float?
+  diet                String    @default("veg") // veg | egg | nonveg
+  /// Home cuisine for the 14-day plan: north | south | east | west | northeast
+  region              String?
+  /// Sugar medicine: none | tablets | insulin (tablets and insulin can cause lows)
+  meds                String    @default("none")
+  /// pregnant | kidney — send the plan to a dietitian before it starts
+  flags               String[]
+  sugarEvery          String    @default("every3")
+  remindWalk          String    @default("07:00")
+  remindMed           String    @default("08:30")
+  remindSugar         String    @default("07:30")
+  remindAfter         String    @default("14:30")
+  consentVer          Int?
+  consentAt           DateTime?
+  tz                  String    @default("Asia/Kolkata")
+  tier                Tier      @default(FREE)
+  tierUntil           DateTime?
+  assignedDietitianId String?
+  assignedDietitian   User?     @relation("AssignedDietitian", fields: [assignedDietitianId], references: [id], onDelete: SetNull)
+  // Dietitian-set targets: carbs per main meal (g), protein / fiber per day (g), kcal per day.
+  targetMealCarbs     Int       @default(60)
+  targetProtein       Int       @default(60)
+  targetFiber         Int       @default(25)
+  targetKcal          Int?
+  targetMode          String    @default("auto") // auto | dietitian
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  meals         Meal[]
+  foodPicks     FoodPick[]
+  enrollments   Enrollment[]
+  readings      SugarReading[]
+  medications   Medication[]
+  doses         DoseLog[]
+  activity      DailyActivity[]
+  events        CareEvent[]
+  checkups      Checkup[]
+  vitals        Vital[]
+  chat          ChatMessage[]
+  stats         PatientStats?
+  dietPlans     DietPlan[]
+  exercisePlans ExercisePlan[]
+  notes         DietitianNote[]
+  circle        Circle?
+  subscriptions Subscription[]
+
+  @@index([assignedDietitianId])
+}
+
+// ---------- Catalog (admin-fed, synced to the app) ----------
+
+model Ingredient {
+  id        String       @id // slug, e.g. "atta"
+  nameEn    String
+  nameHi    String       @default("")
+  carb      Float // per 100 g: available carbohydrate
+  protein   Float
+  fat       Float
+  fiber     Float
+  alc       Float        @default(0)
+  /// Free sugars g and sodium mg per 100 g (IFCT 2017 / USDA).
+  sugar     Float        @default(0)
+  sodium    Float        @default(0)
+  /// IFCT 2017 food code (e.g. A019) or "USDA:<fdcId>".
+  ifctCode  String?
+  source    String       @default("")
+  updatedAt DateTime     @updatedAt
+  recipes   FoodRecipe[]
+}
+
+model Food {
+  id           String    @id // slug, e.g. "roti"
+  emoji        String
+  nameEn       String
+  nameHi       String
+  aliases      String[]
+  diet         String // veg | egg | nonveg
+  group        String // starter | grain | dalsabzi | protein | snack | drink | sweet | treat | alcohol | mixer
+  gi           String // low | med | high
+  unit         String // piece | katori | glass | plate | pcs | peg | beer | wine
+  role         String // veg | protein | grain | other (plate method)
+  servingG     Float
+  std          Float? // standard alcoholic drinks per portion
+  sweet        Boolean   @default(false)
+  // Nutrition for one serving. Computed from the recipe unless `manual` is true.
+  carbs        Float
+  protein      Float
+  fiber        Float
+  fat          Float
+  kcal         Float
+  manual       Boolean   @default(false)
+  sources      String[]
+  imageUrl     String?
+  /// Per serving: free sugars g, sodium mg.
+  sugar        Float     @default(0)
+  sodium       Float     @default(0)
+  regions      String[] // north | south | east | west | northeast | pan
+  slots        String[] // meals it suits
+  /// Household measure shown to people ("1 medium roti", "1 katori").
+  measure      String    @default("")
+  giValue      Int?
+  giSource     String    @default("")
+  /// New foods start as draft and reach the app only after a dietitian verifies them.
+  reviewStatus String    @default("verified") // draft | verified
+  reviewedById String?
+  reviewedAt   DateTime?
+  /// QA only: published carbs per serving to compare with the computed value.
+  refCarbs     Float?
+  refSource    String    @default("")
+  active       Boolean   @default(true)
+  sort         Int       @default(0)
+  updatedAt    DateTime  @updatedAt
+
+  recipe        FoodRecipe[]
+  swapsFrom     FoodSwap[]         @relation("SwapFrom")
+  swapsTo       FoodSwap[]         @relation("SwapTo")
+  planItems     DietPlanItem[]
+  programMeals  ProgramMeal[]
+  picks         FoodPick[]
+  templateItems DietTemplateItem[]
+}
+
+model FoodRecipe {
+  foodId       String
+  food         Food       @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  grams        Float
+
+  @@id([foodId, ingredientId])
+}
+
+model FoodSwap {
+  fromId    String
+  from      Food     @relation("SwapFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  toId      String
+  to        Food     @relation("SwapTo", fields: [toId], references: [id], onDelete: Cascade)
+  updatedAt DateTime @updatedAt
+
+  @@id([fromId])
+}
+
+model Exercise {
+  id         String             @id // slug
+  emoji      String
+  nameEn     String
+  nameHi     String
+  kind       String // walk | yoga | strength | chair | breathing | stretch
+  defaultMin Int
+  intensity  String // light | moderate | vigorous
+  safeFor    String[] // senior | pregnancy | child | low_mobility
+  stepsEn    String
+  stepsHi    String
+  videoUrl   String?
+  /// Sample videos added by the admin: [{ id: YouTube video id, title }], played inside the app.
+  videos     Json               @default("[]")
+  active     Boolean            @default(true)
+  sort       Int                @default(0)
+  updatedAt  DateTime           @updatedAt
+  planItems  ExercisePlanItem[]
+}
+
+/// One-tap plate on the app's meal screen, built by a dietitian from catalog foods.
+model Thali {
+  id        String    @id // slug, e.g. "north"
+  emoji     String
+  nameEn    String
+  nameHi    String
+  /// Worked out from the items (strictest food): veg | egg | nonveg
+  diet      String
+  /// Meals it suits; the app shows these first for the meal being logged.
+  slots     String[]
+  /// [{ foodId, qty }]
+  items     Json
+  active    Boolean   @default(true)
+  sort      Int       @default(0)
+  deletedAt DateTime?
+  updatedAt DateTime  @updatedAt
+}
+
+model Tip {
+  id        String   @id @default(uuid())
+  emoji     String
+  en        String
+  hi        String
+  category  String   @default("general")
+  active    Boolean  @default(true)
+  sort      Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+/// "When sugar is in this band, suggest these foods and avoid those."
+model FoodRule {
+  id        String   @id @default(uuid())
+  band      String // low | normal | high | very_high
+  ctx       String   @default("any") // fasting | after | any
+  recommend String[] // food ids
+  avoid     String[] // food ids
+  messageEn String
+  messageHi String
+  active    Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+// ---------- Plans ----------
+
+model DietPlan {
+  id             String         @id @default(uuid())
+  patientId      String
+  patient        Patient        @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  dietitianId    String?
+  dietitian      User?          @relation(fields: [dietitianId], references: [id], onDelete: SetNull)
+  title          String
+  /**
+   * Hindi title for Hindi readers; empty = show the English one.
+   */
+  titleHi        String         @default("")
+  startsOn       DateTime
+  endsOn         DateTime?
+  status         String         @default("active") // draft | active | ended
+  carbsBreakfast Int?
+  carbsLunch     Int?
+  carbsDinner    Int?
+  protein        Int?
+  fiber          Int?
+  kcal           Int?
+  notes          String         @default("")
+  notesHi        String         @default("")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  items          DietPlanItem[]
+
+  @@index([patientId, status])
+}
+
+model DietPlanItem {
+  id      String   @id @default(uuid())
+  planId  String
+  plan    DietPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  weekday Int? // 0 = Sunday ... 6; null = every day
+  /// Programme day 1–14 (14-day plan); null = weekday rules above
+  day     Int?
+  slot    String // breakfast | lunch | dinner | snack
+  foodId  String
+  food    Food     @relation(fields: [foodId], references: [id])
+  qty     Float    @default(1)
+  note    String   @default("")
+  sort    Int      @default(0)
+}
+
+model DietTemplate {
+  id        String             @id @default(uuid())
+  title     String
+  /**
+   * Hindi title for Hindi readers; empty = show the English one.
+   */
+  titleHi   String             @default("")
+  diet      String             @default("veg")
+  kcal      Int?
+  notes     String             @default("")
+  notesHi   String             @default("")
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  items     DietTemplateItem[]
+}
+
+model DietTemplateItem {
+  id         String       @id @default(uuid())
+  templateId String
+  template   DietTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  weekday    Int?
+  slot       String
+  foodId     String
+  food       Food         @relation(fields: [foodId], references: [id])
+  qty        Float        @default(1)
+  note       String       @default("")
+  sort       Int          @default(0)
+}
+
+model ExercisePlan {
+  id          String             @id @default(uuid())
+  patientId   String
+  patient     Patient            @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  dietitianId String?
+  dietitian   User?              @relation(fields: [dietitianId], references: [id], onDelete: SetNull)
+  title       String
+  /**
+   * Hindi title for Hindi readers; empty = show the English one.
+   */
+  titleHi     String             @default("")
+  startsOn    DateTime
+  endsOn      DateTime?
+  status      String             @default("active")
+  notes       String             @default("")
+  notesHi     String             @default("")
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  items       ExercisePlanItem[]
+
+  @@index([patientId, status])
+}
+
+model ExercisePlanItem {
+  id         String       @id @default(uuid())
+  planId     String
+  plan       ExercisePlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   Exercise     @relation(fields: [exerciseId], references: [id])
+  weekdays   Int[] // empty = every day
+  /// Programme day 1–14; null = weekday rules above
+  day        Int?
+  time       String       @default("") // HH:MM, optional
+  minutes    Int
+  note       String       @default("")
+  sort       Int          @default(0)
+}
+
+// ---------- Logs (from the app; ids are the app's own) ----------
+
+model Meal {
+  id        String    @id
+  patientId String
+  patient   Patient   @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  slot      String
+  kind      String    @default("meal")
+  at        DateTime
+  items     Json // [{ id: foodId, q: qty }]
+  carbs     Float
+  protein   Float
+  fiber     Float     @default(0)
+  kcal      Float     @default(0)
+  updatedAt DateTime
+  deletedAt DateTime?
+
+  @@index([patientId, at])
+}
+
+model SugarReading {
+  id        String    @id
+  patientId String
+  patient   Patient   @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  value     Int
+  ctx       String // fasting | after | random
+  at        DateTime
+  updatedAt DateTime
+  deletedAt DateTime?
+
+  @@index([patientId, at])
+}
+
+model Medication {
+  id        String    @id
+  patientId String
+  patient   Patient   @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  name      String
+  time      String // HH:MM
+  kind      String    @default("tablet") // tablet | insulin | syrup | other
+  dose      Float? // amount per dose
+  unit      String? // tab | mg | units | ml
+  stock     Int?
+  updatedAt DateTime
+  deletedAt DateTime?
+  doses     DoseLog[]
+}
+
+model DoseLog {
+  id           String     @id // `${medicationId}:${date}`
+  patientId    String
+  patient      Patient    @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  medicationId String
+  medication   Medication @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+  date         String // YYYY-MM-DD (patient's local date)
+  status       String // taken | skipped
+  amount       Float? // what was actually taken (e.g. insulin units)
+  updatedAt    DateTime
+
+  @@index([patientId, date])
+}
+
+model DailyActivity {
+  id        String   @id // `${patientId}:${date}`
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  date      String
+  walkMin   Int      @default(0)
+  steps     Int      @default(0)
+  water     Int      @default(0)
+  score     Int?
+  updatedAt DateTime
+
+  @@index([patientId, date])
+}
+
+model CareEvent {
+  id        String   @id
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  kind      String // sugar | unwell | sos
+  data      Json     @default("{}")
+  at        DateTime
+
+  @@index([patientId, at])
+}
+
+model Checkup {
+  id        String   @id // `${patientId}:${kind}`
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  kind      String // a1c | eye | foot | kidney
+  lastDone  String // YYYY-MM-DD
+  value     Float? // e.g. lab HbA1c
+  updatedAt DateTime
+}
+
+/// Weight and blood pressure readings from the app.
+model Vital {
+  id        String    @id
+  patientId String
+  patient   Patient   @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  kind      String // weight | bp
+  weightKg  Float?
+  sys       Int?
+  dia       Int?
+  pulse     Int?
+  at        DateTime
+  updatedAt DateTime
+  deletedAt DateTime?
+
+  @@index([patientId, at])
+}
+
+/// One conversation per patient with their assigned dietitian (and the owner).
+model ChatMessage {
+  id          String    @id @default(uuid())
+  patientId   String
+  patient     Patient   @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  senderId    String?
+  sender      User?     @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  fromStaff   Boolean
+  text        String
+  createdAt   DateTime  @default(now())
+  /// When the other side's app or panel fetched it (WhatsApp's grey double tick).
+  deliveredAt DateTime?
+  readAt      DateTime?
+
+  @@index([patientId, createdAt])
+}
+
+/// Rolled-up numbers for fast admin filters (refreshed on each sync and nightly).
+model PatientStats {
+  patientId     String    @id
+  patient       Patient   @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  lastValue     Int?
+  lastCtx       String?
+  lastAt        DateTime?
+  avg7          Float?
+  avg30         Float?
+  fastingAvg7   Float?
+  fastingAvg30  Float?
+  afterAvg7     Float?
+  afterAvg30    Float?
+  readings30    Int       @default(0)
+  inRange30     Float? // % of readings 70–180
+  lows30        Int       @default(0)
+  ea1c          Float?
+  medAdherence7 Float? // % doses taken
+  walkDays7     Int       @default(0)
+  lastSeenAt    DateTime?
+  weightKg      Float?
+  bpSys         Int?
+  bpDia         Int?
+  vitalsAt      DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  @@index([fastingAvg7])
+  @@index([avg7])
+  @@index([afterAvg7])
+}
+
+// ---------- Family ----------
+
+model Circle {
+  id            String          @id @default(uuid())
+  patientId     String          @unique
+  patient       Patient         @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  inviteCode    String?         @unique
+  codeExpiresAt DateTime?
+  createdAt     DateTime        @default(now())
+  members       CircleMember[]
+  messages      FamilyMessage[]
+}
+
+model CircleMember {
+  circleId    String
+  circle      Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String   @default("")
+  status      String   @default("pending") // pending | active
+  mutedAlerts String[]
+  lang        String   @default("en")
+  createdAt   DateTime @default(now())
+
+  @@id([circleId, userId])
+  @@index([userId])
+}
+
+model FamilyMessage {
+  id       String    @id @default(uuid())
+  circleId String
+  circle   Circle    @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  fromId   String?
+  from     User?     @relation(fields: [fromId], references: [id], onDelete: SetNull)
+  fromName String    @default("")
+  kind     String // cheer | remind
+  text     String    @default("")
+  at       DateTime  @default(now())
+  readAt   DateTime?
+}
+
+// ---------- Messaging ----------
+
+model Device {
+  token     String   @id // Expo push token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform  String
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id          String                @id @default(uuid())
+  senderId    String?
+  sender      User?                 @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  titleEn     String
+  titleHi     String                @default("")
+  bodyEn      String
+  bodyHi      String                @default("")
+  deeplink    String                @default("/")
+  /// Automatic messages: "life:day2:new", "life:day2:active", "life:day7"; null for ones a dietitian wrote.
+  kind        String?
+  audience    Json // { userIds?: string[], segmentId?: string, filter?: {...} }
+  scheduledAt DateTime              @default(now())
+  sentAt      DateTime?
+  recipients  Int                   @default(0)
+  pushed      Int                   @default(0)
+  createdAt   DateTime              @default(now())
+  receipts    NotificationReceipt[]
+}
+
+model NotificationReceipt {
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt         DateTime?
+
+  @@id([notificationId, userId])
+  @@index([userId])
+}
+
+model Segment {
+  id        String   @id @default(uuid())
+  name      String
+  filter    Json
+  createdBy String?
+  createdAt DateTime @default(now())
+}
+
+model AlertSent {
+  patientId String
+  key       String
+  sentAt    DateTime @default(now())
+
+  @@id([patientId, key])
+}
+
+// ---------- Business ----------
+
+model SubscriptionPlan {
+  id            String         @id // free | basic | pro
+  name          String
+  /**
+   * Hindi name and features for Hindi readers; empty = show the English ones.
+   */
+  nameHi        String         @default("")
+  priceInr      Int
+  months        Int            @default(1)
+  features      String[]
+  featuresHi    String[]       @default([])
+  active        Boolean        @default(true)
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id          String           @id @default(uuid())
+  patientId   String
+  patient     Patient          @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  planId      String
+  plan        SubscriptionPlan @relation(fields: [planId], references: [id])
+  status      String           @default("active") // active | expired | cancelled
+  startsAt    DateTime         @default(now())
+  endsAt      DateTime
+  /// How it was paid: manual | upi | cash | card | bank | razorpay (later) | demo
+  provider    String           @default("manual")
+  /// Payment reference (UPI transaction id, receipt no.)
+  ref         String?
+  /// What was actually paid for this period (discounts happen); null = plan price.
+  amountInr   Int?
+  createdById String?
+  note        String           @default("")
+  createdAt   DateTime         @default(now())
+
+  @@index([patientId, endsAt])
+}
+
+model DietitianNote {
+  id        String   @id @default(uuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id       String   @id @default(uuid())
+  actorId  String?
+  actor    User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action   String // e.g. "GET /admin/patients/:id"
+  entity   String   @default("")
+  entityId String   @default("")
+  at       DateTime @default(now())
+
+  @@index([actorId, at])
+}
+
+/// One phone install, anonymous until sign-in: which onboarding steps it reached (funnel).
+model AppInstall {
+  id         String   @id // random id made on the phone
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  platform   String
+  appVersion String?
+  lang       String?
+  /// step -> first time reached (ISO): open, lang, mode, diet, phone, otp, setup, done
+  steps      Json     @default("{}")
+  firstSeen  DateTime @default(now())
+  lastSeen   DateTime @default(now())
+
+  @@index([firstSeen])
+}
+
+/// Time in the foreground, sent by the app after each visit (a gap of 30 s or more starts a new one).
+model AppSession {
+  id         String   @id // made on the phone
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  installId  String?
+  startedAt  DateTime
+  seconds    Int
+  /// screen route -> seconds spent there
+  screens    Json     @default("{}")
+  platform   String?
+  appVersion String?
+
+  @@index([startedAt])
+  @@index([userId, startedAt])
+}
+
+/// Product events from the app (plan followed, video watched, exercise done), sent with sync.
+model AppEvent {
+  id     String   @id // made on the phone
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// plan_ate | video_play | exercise_done
+  name   String
+  props  Json     @default("{}")
+  at     DateTime
+
+  @@index([name, at])
+  @@index([userId, at])
+}
+
+/// Foods a dietitian recommends for one patient: the "For you" tab on the app's meal screen.
+model FoodPick {
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  foodId    String
+  food      Food     @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  /// Meals it suits; empty = any meal.
+  slots     String[]
+  /// Why, in the patient's words ("Fiber keeps sugar steady").
+  note      String   @default("")
+  sort      Int      @default(0)
+  addedById String?
+  addedBy   User?    @relation(fields: [addedById], references: [id], onDelete: SetNull)
+  updatedAt DateTime @updatedAt
+
+  @@id([patientId, foodId])
+}
+
+/// A ready-made 14-day plan a dietitian writes once; new patients get a personal copy.
+model ProgramTemplate {
+  id          String        @id // slug, e.g. "veg-north"
+  title       String
+  /**
+   * Hindi title for Hindi readers; empty = show the English one.
+   */
+  titleHi     String        @default("")
+  diet        String // veg | egg | nonveg
+  region      String // north | south | east | west | northeast
+  risk        String        @default("standard") // standard | hypo_safe
+  kcal        Int           @default(1500)
+  notes       String        @default("")
+  notesHi     String        @default("")
+  active      Boolean       @default(true)
+  updatedAt   DateTime      @updatedAt
+  days        ProgramDay[]
+  meals       ProgramMeal[]
+  enrollments Enrollment[]
+}
+
+/// One day of a template: focus, tip, exercises and which sugar check to do.
+model ProgramDay {
+  templateId String
+  template   ProgramTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  day        Int
+  focusEn    String          @default("")
+  focusHi    String          @default("")
+  tipEn      String          @default("")
+  tipHi      String          @default("")
+  /// none | fasting | after_meal
+  sugarCheck String          @default("none")
+  /// [{ exerciseId, minutes }]
+  exercises  Json            @default("[]")
+
+  @@id([templateId, day])
+}
+
+model ProgramMeal {
+  id         String          @id @default(uuid())
+  templateId String
+  template   ProgramTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  day        Int
+  slot       String
+  foodId     String
+  food       Food            @relation(fields: [foodId], references: [id])
+  qty        Float           @default(1)
+  /// Foods sharing a group can be swapped for each other in the app.
+  altGroup   String          @default("")
+  sort       Int             @default(0)
+
+  @@index([templateId, day])
+}
+
+/// A patient's 14-day programme: baseline, review, results and whether they went on to pay.
+model Enrollment {
+  id           String           @id @default(uuid())
+  patientId    String
+  patient      Patient          @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  templateId   String?
+  template     ProgramTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  /// pending_review | active | completed | dropped | converted
+  status       String           @default("active")
+  startsOn     String // YYYY-MM-DD, day 1
+  kcal         Int              @default(1500)
+  baseline     Json             @default("{}")
+  riskReasons  String[]
+  result       Json?
+  reviewedById String?
+  reviewedAt   DateTime?
+  offerShownAt DateTime?
+  convertedAt  DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([status])
+  @@index([patientId])
+}
+
+/// Short diabetes videos (YouTube) shown in the app's "Learn" feed. Curated by staff.
+model Reel {
+  id          String    @id @default(uuid())
+  youtubeId   String
+  titleEn     String
+  titleHi     String    @default("")
+  /// learn | recipe | exercise | myth | story
+  category    String
+  /// Spoken language: hi | en | both
+  lang        String    @default("both")
+  featured    Boolean   @default(false)
+  active      Boolean   @default(true)
+  sort        Int       @default(0)
+  createdById String?
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@index([updatedAt])
+}

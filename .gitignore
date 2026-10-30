@@ -41,3 +41,18 @@ example
 # generated native folders
 /ios
 /android
+
+# Continuous Native Generation
+/ios
+/android
+
+# backend keys
+.env
+supabase/.temp/
+supabase/.branches/
+certs/
+server/node_modules/
+server/dist/
+admin/node_modules/
+admin/dist/
+deploy/backups/

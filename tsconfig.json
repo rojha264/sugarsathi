@@ -8,13 +8,25 @@
       ],
       "@/assets/*": [
         "./assets/*"
+      ],
+      "@shared/*": [
+        "./packages/shared/src/*"
       ]
-    }
+    },
+    "types": [
+      "jest"
+    ]
   },
+  "exclude": [
+    "node_modules",
+    "android",
+    "ios",
+    "server",
+    "admin",
+    "packages/*/node_modules"
+  ],
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "**/*.tsx"
   ]
 }
