@@ -45,7 +45,7 @@ EXPO_OFFLINE=1 EXPO_PUBLIC_API_URL=http://10.0.2.2:4000 npx expo start   # Andro
 
 **Data and tests**
 - Reseed: `cd server && DATABASE_URL=postgresql://glucobuddy:glucobuddy@localhost:5432/glucobuddy npx tsx prisma/seed.ts`
-- SQL dump: `npm run dump`
+- SQL dump: `scripts/db-backup.sh` writes `db/`; `scripts/db-restore.sh` loads it on another machine (see [db/README.md](db/README.md))
 - Tests:
   - API: `cd server && DATABASE_URL=… npm test` (end to end against the database)
   - Admin: `cd admin && npm test && npx playwright test` (browser smoke test)
