@@ -2,7 +2,8 @@
 # GlucoBuddy admin panel, production image: a static build served by nginx. Build from the repo root:
 #   docker build -f admin/Dockerfile --build-arg VITE_API_URL=https://api.example.com -t glucobuddy-admin .
 # Behind a TLS-inspecting proxy (Zscaler) add: --secret id=ca,src=certs/extra-ca.pem  (not stored in the image)
-FROM node:22-alpine AS build
+# The output is static files, so build on the machine's own platform (no CPU emulation when cross-building).
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 WORKDIR /app
 COPY admin/package.json admin/package-lock.json admin/
 RUN --mount=type=secret,id=ca,required=false \

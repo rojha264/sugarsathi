@@ -119,6 +119,17 @@ nano deploy/.env
 docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
 ```
 
+> [!TIP]
+> **Small server (1 GB RAM, e.g. AWS EC2 free tier)** can't build the images. Skip 3.2, 3.3 and 3.5 and do this instead (no git checkout on the server):
+>
+> ```sh
+> ssh -i key.pem ubuntu@SERVER 'sh -s' < deploy/server-setup.sh   # once: Docker, 1 GB swap, small logs
+> # put the filled-in .env at ~/sugarsaathi/deploy/.env on the server, then every release:
+> SSH_KEY=key.pem SSH_HOST=ubuntu@SERVER API_DOMAIN=api.yourdomain.in deploy/deploy.sh
+> ```
+>
+> `deploy.sh` builds both images for `linux/amd64` on your laptop, uploads them and restarts the stack. Behind Zscaler add `BUILDER=colima` (a builder whose Docker daemon trusts the proxy). Run 3.6 from `~/sugarsaathi` on the server.
+
 **3.6 Load the food catalog and the first owner login** (once):
 
 ```sh
