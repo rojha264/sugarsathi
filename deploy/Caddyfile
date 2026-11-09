@@ -12,3 +12,29 @@
 	encode gzip
 	reverse_proxy admin:80
 }
+
+# Public website (static files from website/).
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	root * /srv/site
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		-Server
+	}
+	# Pages always revalidate; images and the versioned stylesheet are cached for a week.
+	@static path *.css *.png *.webmanifest
+	header @static Cache-Control "public, max-age=604800"
+	header ?Cache-Control "no-cache"
+	file_server
+	handle_errors 404 {
+		rewrite * /404.html
+		file_server
+	}
+}
+
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
