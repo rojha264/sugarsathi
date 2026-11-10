@@ -493,6 +493,26 @@ describe('thalis (admin-managed one-tap plates)', () => {
   });
 });
 
+describe('food categories', () => {
+  it('filters and searches foods by category, and fills one in when staff leave it empty', async () => {
+    const http = app.getHttpServer();
+    const d1 = await loginStaff('dietitian1@glucobuddy.local');
+    const drinks = await request(http).get('/admin/foods?category=juice&pageSize=200').set(auth(d1.accessToken)).expect(200);
+    expect(drinks.body.total).toBeGreaterThan(0);
+    expect(drinks.body.data.every((f: { category: string }) => f.category === 'juice')).toBe(true);
+    const found = await request(http).get('/admin/foods?q=fruits&pageSize=50').set(auth(d1.accessToken)).expect(200);
+    expect(found.body.data.some((f: { category: string }) => f.category === 'fruit')).toBe(true);
+
+    const body = { emoji: '🥤', nameEn: 'Test kiwi smoothie', nameHi: 'टेस्ट स्मूदी', aliases: [], diet: 'veg', group: 'drink', gi: 'low', unit: 'glass', role: 'other', servingG: 200, carbs: 10, protein: 3, fiber: 2, fat: 1, kcal: 60, manual: true, sources: [] };
+    const auto = await request(http).put('/admin/foods/testkiwismoothie').set(auth(d1.accessToken)).send(body).expect(200);
+    expect(auto.body.category).toBe('smoothie');
+    const set = await request(http).put('/admin/foods/testkiwismoothie').set(auth(d1.accessToken)).send({ ...body, category: 'fruit' }).expect(200);
+    expect(set.body.category).toBe('fruit');
+    await request(http).put('/admin/foods/testkiwismoothie').set(auth(d1.accessToken)).send({ ...body, category: 'pizza' }).expect(400);
+    await db.food.delete({ where: { id: 'testkiwismoothie' } });
+  });
+});
+
 describe('"For you" foods picked by the dietitian', () => {
   it('saves picks for the patient diet only, notifies on new ones, and sends them in pull', async () => {
     const http = app.getHttpServer();

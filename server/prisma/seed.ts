@@ -9,6 +9,7 @@
 import { PrismaClient, type Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
+import { categoryOf } from '@shared/category';
 import { FOOD_BY_ID, FOODS, SWAPS } from '@/data/foods';
 import { INGREDIENTS } from '@/data/nutrition/ingredients';
 import { RECIPES } from '@/data/nutrition/recipes';
@@ -278,6 +279,7 @@ async function main() {
   await db.food.createMany({
     data: FOODS.map((f, sort) => ({
       id: f.id, emoji: f.e, nameEn: f.n.en, nameHi: f.n.hi, aliases: f.kw, diet: f.diet, group: f.group, gi: f.gi, unit: f.unit, role: f.role,
+      category: categoryOf({ id: f.id, group: f.group, diet: f.diet, nameEn: f.n.en, aliases: f.kw }),
       servingG: f.g, std: f.std ?? null, sweet: !!f.sweet, carbs: f.c, protein: f.p, fiber: f.f, fat: f.fat, kcal: f.kcal, sources: f.src, sort,
     })),
   });

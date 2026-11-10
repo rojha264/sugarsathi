@@ -4,13 +4,13 @@ import { Alert, App, Button, Card, Col, Form, Input, InputNumber, Row, Segmented
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { DIETS, GROUP_LABEL, GROUPS, REGION_LABEL, REGIONS, UNITS } from '../lib/labels';
+import { CATEGORY_OPTIONS, categoryName, DIETS, GROUP_LABEL, GROUPS, REGION_LABEL, REGIONS, UNITS } from '../lib/labels';
 import { api } from '../providers/api';
 import { bilingual, foodSearch } from '../lib/search';
 import { SearchBox } from '../components/SearchBox';
 
 type Food = {
-  id: string; emoji: string; nameEn: string; nameHi: string; aliases: string[]; diet: string; group: string; gi: string; unit: string; role: string;
+  id: string; emoji: string; nameEn: string; nameHi: string; aliases: string[]; diet: string; group: string; category: string; gi: string; unit: string; role: string;
   servingG: number; carbs: number; protein: number; fiber: number; fat: number; kcal: number; manual: boolean; active: boolean; sources: string[];
   sugar: number; sodium: number; regions: string[]; measure: string; giValue: number | null; reviewStatus: 'draft' | 'verified'; refCarbs: number | null; refSource: string;
   recipe?: { ingredientId: string; grams: number }[]; swapsFrom?: { toId: string }[];
@@ -62,6 +62,7 @@ export function FoodList() {
           suggest={(q) => api<{ data: Food[] }>(`/admin/foods?q=${encodeURIComponent(q)}&pageSize=8`).then((r) => r.data.map((f) => ({ value: f.id, label: `${f.emoji} ${f.nameEn} · ${f.nameHi}` })))}
           onPick={(id) => edit('foods', id)}
         />
+        <Select allowClear showSearch optionFilterProp="label" placeholder="Category: fruits, smoothies…" style={{ width: 260 }} options={CATEGORY_OPTIONS} onChange={(v) => setFilters([{ field: 'category', operator: 'eq', value: v }], 'merge')} />
         <Select allowClear placeholder="App tab" style={{ width: 200 }} options={GROUPS.map((g) => ({ value: g, label: GROUP_LABEL[g] ?? g }))} onChange={(v) => setFilters([{ field: 'group', operator: 'eq', value: v }], 'merge')} />
         <Select allowClear placeholder="Diet" style={{ width: 140 }} options={Object.entries(DIETS).map(([value, label]) => ({ value, label }))} onChange={(v) => setFilters([{ field: 'diet', operator: 'eq', value: v }], 'merge')} />
         <Select allowClear placeholder="Region" style={{ width: 150 }} options={REGIONS.map((v) => ({ value: v, label: REGION_LABEL[v] }))} onChange={(v) => setFilters([{ field: 'region', operator: 'eq', value: v }], 'merge')} />
@@ -82,6 +83,7 @@ export function FoodList() {
               </Space>
             ),
           },
+          { title: 'Category', dataIndex: 'category', render: (c: string) => categoryName(c) },
           { title: 'App tab', dataIndex: 'group', sorter: true, render: (g: string) => GROUP_LABEL[g] ?? g },
           { title: 'Diet', dataIndex: 'diet', render: (v) => DIETS[v] },
           { title: 'GI', dataIndex: 'gi', render: (v) => <Tag color={v === 'low' ? 'green' : v === 'med' ? 'gold' : 'red'}>{v}</Tag> },
@@ -185,6 +187,7 @@ export function FoodEdit() {
           <Col xs={24} md={6}><Form.Item name="nameHi" label="Name (Hindi)" rules={[{ required: true }]}><Input /></Form.Item></Col>
           <Col xs={24} md={6}><Form.Item name="aliases" label="Voice words (comma separated)" getValueProps={(v) => ({ value: Array.isArray(v) ? v.join(', ') : v })}><Input /></Form.Item></Col>
           <Col xs={12} md={4}><Form.Item name="group" label="App tab" tooltip="Where the food shows on the app's meal screen. 'Eat first' is for salads, soups and other foods to start a meal with."><Select options={GROUPS.map((g) => ({ value: g, label: GROUP_LABEL[g] ?? g }))} /></Form.Item></Col>
+          <Col xs={12} md={4}><Form.Item name="category" label="Category" tooltip="For finding foods in admin (menus, plans, this list). Leave empty to set it from the app tab and name."><Select allowClear showSearch optionFilterProp="label" placeholder="Auto" options={CATEGORY_OPTIONS} /></Form.Item></Col>
           <Col xs={12} md={4}><Form.Item name="diet" label="Diet"><Select options={Object.entries(DIETS).map(([value, label]) => ({ value, label }))} /></Form.Item></Col>
           <Col xs={12} md={3}><Form.Item name="gi" label="Glycemic index"><Select options={['low', 'med', 'high'].map((v) => ({ value: v, label: v }))} /></Form.Item></Col>
           <Col xs={12} md={3}><Form.Item name="unit" label="Unit"><Select options={UNITS.map((v) => ({ value: v, label: v }))} /></Form.Item></Col>

@@ -5,6 +5,7 @@ import { api } from '../providers/api';
 export type Food = {
   id: string; emoji: string; nameEn: string; nameHi: string; diet: string; group: string; gi: string; unit: string;
   carbs: number; protein: number; fiber: number; fat: number; kcal: number; active: boolean; role: string; servingG: number; reviewStatus?: 'draft' | 'verified'; aliases?: string[];
+  category?: string;
 };
 
 /** Can go into plans, thalis and picks: shown in the app and verified by a dietitian (drafts are not on phones yet). */

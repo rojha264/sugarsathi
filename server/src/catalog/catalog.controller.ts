@@ -2,6 +2,7 @@ import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Prisma } from '@prisma/client';
 
+import { CATEGORIES, CATEGORY_LABEL, categoryOf, type Category } from '@shared/category';
 import { portionFrom } from '@shared/nutrition';
 import { MEAL_SLOTS, thaliNutrition, thaliProblem, type MealSlot, type NutritionFood, type ThaliItem } from '@shared/thali';
 import { parseVideos } from '@shared/youtube';
@@ -12,6 +13,9 @@ import { PrismaService } from '../common/prisma.service';
 type ThaliBody = { emoji: string; nameEn: string; nameHi: string; slots?: string[]; items: ThaliItem[]; active?: boolean };
 const NUTRITION_FIELDS = { id: true, carbs: true, protein: true, fiber: true, fat: true, kcal: true, gi: true, role: true, diet: true, servingG: true, active: true } as const;
 const SLUG = /^[a-z0-9-]{2,40}$/;
+
+/** Category names as search words: typing "smoothie" or "फल" finds that whole category. */
+const categoryWords = (c: string) => (c in CATEGORY_LABEL ? Object.values(CATEGORY_LABEL[c as Category]).map((l) => l.replace(/^\S+\s/, '')) : []);
 
 type FoodBody = Omit<Prisma.FoodUncheckedCreateInput, 'updatedAt'> & { recipe?: { ingredientId: string; grams: number }[]; swapTo?: string | null };
 
@@ -25,15 +29,16 @@ export class CatalogController {
 
   // ----- foods -----
   @Get('foods')
-  async foods(@Query() q: ListQuery & { group?: string; diet?: string; active?: string; reviewStatus?: string; region?: string }) {
+  async foods(@Query() q: ListQuery & { group?: string; category?: string; diet?: string; active?: string; reviewStatus?: string; region?: string }) {
     const where: Prisma.FoodWhereInput = {
       ...(q.group ? { group: q.group } : {}),
+      ...(q.category ? { category: q.category } : {}),
       ...(q.diet ? { diet: q.diet } : {}),
       ...(q.active ? { active: q.active === 'true' } : {}),
       ...(q.reviewStatus ? { reviewStatus: q.reviewStatus } : {}),
       ...(q.region ? { regions: { has: q.region } } : {}),
     };
-    if (q.q?.trim()) return rankPage(await this.db.food.findMany({ where, orderBy: { sort: 'asc' } }), q, (f) => [f.nameEn, f.nameHi, f.id, ...f.aliases]);
+    if (q.q?.trim()) return rankPage(await this.db.food.findMany({ where, orderBy: { sort: 'asc' } }), q, (f) => [f.nameEn, f.nameHi, f.id, ...f.aliases, ...categoryWords(f.category)]);
     const [data, total] = await Promise.all([this.db.food.findMany({ where, ...paging(q, ['nameEn', 'carbs', 'protein', 'kcal', 'sodium', 'sort', 'group', 'reviewStatus'], 'sort') }), this.db.food.count({ where })]);
     return { data, total };
   }
@@ -56,6 +61,9 @@ export class CatalogController {
   @Put('foods/:id')
   async saveFood(@Param('id') id: string, @Body() body: FoodBody) {
     const { recipe, swapTo, ...food } = body;
+    if (food.category && !(CATEGORIES as readonly string[]).includes(food.category)) throw new BadRequestException('bad_category');
+    // No category chosen: work it out from the tab, diet and names.
+    if (!food.category && food.group) food.category = categoryOf({ id, group: food.group, diet: food.diet ?? 'veg', nameEn: food.nameEn ?? '', aliases: (food.aliases as string[] | undefined) ?? [] });
     let nutrition = {};
     if (recipe && !food.manual) {
       const ings = await this.db.ingredient.findMany({ where: { id: { in: recipe.map((r) => r.ingredientId) } } });

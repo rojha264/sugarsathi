@@ -168,6 +168,8 @@ model Food {
   aliases      String[]
   diet         String // veg | egg | nonveg
   group        String // starter | grain | dalsabzi | protein | snack | drink | sweet | treat | alcohol | mixer
+  /// Finer than the app tab, for staff to find foods (fruit, smoothie, juice, dal…); see packages/shared/src/category.ts.
+  category     String    @default("")
   gi           String // low | med | high
   unit         String // piece | katori | glass | plate | pcs | peg | beer | wine
   role         String // veg | protein | grain | other (plate method)
@@ -210,6 +212,8 @@ model Food {
   programMeals  ProgramMeal[]
   picks         FoodPick[]
   templateItems DietTemplateItem[]
+
+  @@index([category])
 }
 
 model FoodRecipe {

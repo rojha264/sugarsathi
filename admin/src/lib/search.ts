@@ -1,3 +1,4 @@
+import { CATEGORY_LABEL, type Category } from '@shared/category';
 import { matchScore } from '@shared/search';
 
 /** An antd option that can be found by any of these texts (English, Hindi, Hinglish aliases, id). */
@@ -13,4 +14,7 @@ export const bilingual = {
   filterSort: (a: Searchable, b: Searchable, info: { searchValue: string }) => matchScore(info.searchValue, b.search ?? []) - matchScore(info.searchValue, a.search ?? []),
 };
 
-export const foodSearch = (f: { id: string; nameEn: string; nameHi: string; aliases?: string[] }) => [f.nameEn, f.nameHi, f.id, ...(f.aliases ?? [])];
+/** Category names as search words ("smoothie", "fruits", "फल"), without the emoji. */
+export const categoryWords = (c?: string) => (c && c in CATEGORY_LABEL ? Object.values(CATEGORY_LABEL[c as Category]).map((l) => l.replace(/^\S+\s/, '')) : []);
+
+export const foodSearch = (f: { id: string; nameEn: string; nameHi: string; aliases?: string[]; category?: string }) => [f.nameEn, f.nameHi, f.id, ...(f.aliases ?? []), ...categoryWords(f.category)];

@@ -7,6 +7,12 @@ export type Slot = (typeof SLOTS)[number];
 export const SLOT_LABEL: Record<Slot, string> = { breakfast: '🌅 Breakfast', lunch: '☀️ Lunch', snack: '🍎 Snack', dinner: '🌙 Dinner' };
 export const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export const CTX: Record<string, string> = { fasting: 'Fasting', after: '2 h after meal', random: 'Random' };
+import { CATEGORIES, CATEGORY_LABEL } from '@shared/category';
+
+/** Food categories for filters and pickers: "🍎 Fruits · फल". */
+export const CATEGORY_OPTIONS = CATEGORIES.map((value) => ({ value, label: `${CATEGORY_LABEL[value].en} · ${CATEGORY_LABEL[value].hi.replace(/^\S+\s/, '')}` }));
+export const categoryName = (c?: string) => (c && c in CATEGORY_LABEL ? CATEGORY_LABEL[c as keyof typeof CATEGORY_LABEL].en : '–');
+
 export const GROUPS = ['starter', 'grain', 'dalsabzi', 'protein', 'snack', 'drink', 'sweet', 'treat', 'alcohol', 'mixer'];
 /** Which app tab a food group appears under (meal screen), so editors know where a food will show. */
 export const GROUP_LABEL: Record<string, string> = {

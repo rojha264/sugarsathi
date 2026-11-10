@@ -10,6 +10,8 @@ import { join } from 'node:path';
 
 import { PrismaClient } from '@prisma/client';
 
+import { categoryOf } from '@shared/category';
+
 import { loadIngredients, type BuiltFood } from './nutrition/build';
 
 export async function seedFoods(db: PrismaClient) {
@@ -61,7 +63,10 @@ export async function seedFoods(db: PrismaClient) {
     const sodium = f.recipe.reduce((n, r) => n + (r.ingredient.sodium * r.grams) / 100, 0);
     await db.food.update({ where: { id: f.id }, data: { sugar: Math.round(sugar * 10) / 10, sodium: Math.round(sodium) } });
   }
-  console.log(`Ingredients: ${tables.size} · dishes: ${foods.length} (${created} new, draft)`);
+  // Foods without a category get one from their tab, diet and names; staff can change it in admin.
+  const uncategorised = await db.food.findMany({ where: { category: '' }, select: { id: true, group: true, diet: true, nameEn: true, aliases: true } });
+  for (const f of uncategorised) await db.food.update({ where: { id: f.id }, data: { category: categoryOf(f) } });
+  console.log(`Ingredients: ${tables.size} · dishes: ${foods.length} (${created} new, draft) · categorised: ${uncategorised.length}`);
 }
 
 if (require.main === module) {

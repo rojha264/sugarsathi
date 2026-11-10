@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { eats, type Diet } from '@shared/diet';
 import { MEAL_CARBS, MEAL_SLOTS, type MealSlot } from '@shared/thali';
 
-import { DIETS, SLOT_LABEL } from '../lib/labels';
+import { CATEGORY_OPTIONS, DIETS, SLOT_LABEL } from '../lib/labels';
 import { api } from '../providers/api';
 import { usable, useFoods, type Food } from './useFoods';
 import { bilingual, foodSearch } from '../lib/search';
@@ -38,6 +38,7 @@ export function MealMenu({ id, diet }: { id: string; diet: Diet }) {
   const [planFoods, setPlanFoods] = useState<{ foodId: string; slot: MealSlot }[]>([]);
   const [fallback, setFallback] = useState<Default | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [category, setCategory] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const r = await api<{ data: Pick[]; default: Default }>(`/admin/patients/${id}/picks`);
@@ -109,9 +110,18 @@ export function MealMenu({ id, diet }: { id: string; diet: Diet }) {
   };
 
   if (!picks) return <Card loading />;
-  const options = foods
-    .filter((f) => fits(f) && f.group !== 'alcohol' && f.group !== 'mixer' && !picks.some((p) => p.foodId === f.id))
-    .map((f) => ({ value: f.id, label: `${f.emoji} ${f.nameEn} · ${f.nameHi}`, search: foodSearch(f), f }));
+  const addable = foods.filter((f) => fits(f) && f.group !== 'alcohol' && f.group !== 'mixer' && !picks.some((p) => p.foodId === f.id) && (!category || f.category === category));
+  // Foods in this category still waiting for a dietitian's check (not on phones yet, so not addable).
+  const waiting = category ? foods.filter((f) => f.category === category && f.active && f.reviewStatus === 'draft' && eats(diet, f.diet as Diet)).length : 0;
+  const options = addable.map((f) => ({ value: f.id, label: `${f.emoji} ${f.nameEn} · ${f.nameHi}`, search: foodSearch(f), f }));
+  // Whole category at once, low-GI first, as far as the menu has room.
+  const addAll = () => {
+    const room = MAX - picks.length;
+    const order = { low: 0, med: 1, high: 2 } as Record<string, number>;
+    const list = [...addable].sort((a, b) => (order[a.gi] ?? 1) - (order[b.gi] ?? 1) || a.carbs - b.carbs).slice(0, room);
+    setPicks([...picks, ...list.map((f) => ({ foodId: f.id, slots: [] as MealSlot[], note: '' }))]);
+    message.info(`Added ${list.length} food${list.length === 1 ? '' : 's'}. Untick meals they don't suit, remove any you don't want, then save.`);
+  };
   const custom = picks.length > 0;
   // What the app opens with per meal: this list, else the plan default, else the full food list.
   const perSlot = MEAL_SLOTS.map((s) => ({
@@ -140,15 +150,34 @@ export function MealMenu({ id, diet }: { id: string; diet: Diet }) {
             description={`The patient can still tap "Ate something else?" or search to log any food. Only ${DIETS[diet]} foods can be added. Leave "Meals" empty to show a food at every meal.`}
           />
           {error ? <Alert type="error" showIcon message={error} /> : null}
+          {waiting ? (
+            <Alert
+              type="warning"
+              showIcon
+              message={`${waiting} more food${waiting === 1 ? '' : 's'} in this category ${waiting === 1 ? 'is' : 'are'} waiting for review and can't be added yet.`}
+              action={<Button size="small" href="/foods" target="_blank">Open review queue</Button>}
+            />
+          ) : null}
           <Space wrap style={{ width: '100%' }}>
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              value={category}
+              onChange={(v) => setCategory(v ?? null)}
+              style={{ width: 240 }}
+              placeholder="📂 Category: fruits, smoothies…"
+              options={CATEGORY_OPTIONS}
+            />
             <Select
               {...bilingual}
               value={null}
-              style={{ minWidth: 380 }}
-              placeholder="🔍 Add a food: oats, sprouts, दाल…"
+              style={{ minWidth: 340 }}
+              placeholder={category ? `🔍 Pick from ${options.length} foods in this category` : '🔍 Add a food: oats, sprouts, smoothie, दाल…'}
               options={options}
               onSelect={(v) => v && add(v)}
               disabled={picks.length >= MAX}
+              listHeight={360}
               optionRender={(o) => (
                 <Space style={{ width: '100%', justifyContent: 'space-between' }}>
                   <span>{o.data.label}</span>
@@ -156,6 +185,11 @@ export function MealMenu({ id, diet }: { id: string; diet: Diet }) {
                 </Space>
               )}
             />
+            {category ? (
+              <Popconfirm title={`Add all ${Math.min(addable.length, MAX - picks.length)} foods in this category?`} description="Low-GI foods first. You can remove any before saving." onConfirm={addAll} disabled={!addable.length || picks.length >= MAX}>
+                <Button disabled={!addable.length || picks.length >= MAX}>➕ Add all ({addable.length})</Button>
+              </Popconfirm>
+            ) : null}
             <Tooltip title={planFoods.length ? 'Adds the foods of their active diet plan, with the meals they are planned for' : 'No active diet plan'}>
               <Button onClick={fromPlan} disabled={!planFoods.length}>➕ From diet plan</Button>
             </Tooltip>

@@ -21,13 +21,24 @@ test('dietitian sets a meal menu for a patient, then resets it to default', asyn
     await expect(page.getByText(/default menu on the next sync/)).toBeVisible();
   }
   await expect(rows).toHaveCount(0);
-  const search = page.getByRole('combobox').first();
+  const search = page.getByRole('combobox').nth(1);
   for (const q of ['Salad', 'Sambar']) {
     await search.click();
     await search.fill(q);
     await page.locator('.ant-select-item-option').first().click();
   }
   await expect(rows).toHaveCount(2);
+
+  // A category narrows the picker and can add all of its foods at once.
+  await page.getByRole('combobox').first().click();
+  await page.keyboard.type('Smoothies');
+  await page.locator('.ant-select-item-option').filter({ hasText: 'Smoothies' }).first().click();
+  const addAll = page.getByRole('button', { name: /Add all \(\d+\)/ });
+  await expect(addAll).toBeVisible();
+  if (process.env.SHOTS_DIR) await page.screenshot({ path: `${process.env.SHOTS_DIR}/meal-menu-category.png`, fullPage: true });
+  await page.getByRole('combobox').first().locator('xpath=ancestor::div[contains(@class,"ant-select")][1]').hover();
+  await page.locator('.ant-select-clear').first().click();
+  await expect(addAll).toBeHidden();
   const lunch = rows.first().getByRole('checkbox', { name: 'Lunch' });
   await lunch.click();
   await expect(lunch).toBeChecked();
