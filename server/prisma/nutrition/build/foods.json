@@ -14494,6 +14494,1232 @@
   "batch": "north"
  },
  {
+  "id": "greenjuice",
+  "nameEn": "Green juice (palak-cucumber)",
+  "nameHi": "हरा जूस (पालक-खीरा)",
+  "aliases": [
+   "green juice",
+   "palak juice",
+   "spinach juice",
+   "palak kheera juice",
+   "detox juice",
+   "हरा जूस",
+   "पालक जूस"
+  ],
+  "emoji": "🥬",
+  "group": "drink",
+  "role": "veg",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (250 ml)",
+  "servedG": 250,
+  "recipe": [
+   {
+    "key": "C033",
+    "grams": 40
+   },
+   {
+    "key": "D043",
+    "grams": 100
+   },
+   {
+    "key": "D037",
+    "grams": 30
+   },
+   {
+    "key": "G016",
+    "grams": 5
+   },
+   {
+    "key": "G014",
+    "grams": 3
+   },
+   {
+    "key": "E033",
+    "grams": 10
+   },
+   {
+    "key": "salt",
+    "grams": 0.3
+   }
+  ],
+  "carbs": 5.4,
+  "protein": 2.2,
+  "fiber": 4.2,
+  "fat": 0.6,
+  "kcal": 44,
+  "sugar": 0.9,
+  "sodium": 144,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "blended with water and not strained; no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "laukijuice",
+  "nameEn": "Lauki juice",
+  "nameHi": "लौकी का जूस",
+  "aliases": [
+   "lauki juice",
+   "bottle gourd juice",
+   "dudhi juice",
+   "ghiya juice",
+   "लौकी जूस"
+  ],
+  "emoji": "🥒",
+  "group": "drink",
+  "role": "veg",
+  "diet": "veg",
+  "regions": [
+   "north",
+   "west",
+   "pan"
+  ],
+  "slots": [
+   "breakfast"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (200 ml)",
+  "servedG": 200,
+  "recipe": [
+   {
+    "key": "D007",
+    "grams": 200
+   },
+   {
+    "key": "G016",
+    "grams": 3
+   },
+   {
+    "key": "E033",
+    "grams": 5
+   },
+   {
+    "key": "salt",
+    "grams": 0.3
+   }
+  ],
+  "carbs": 3.4,
+  "protein": 1.2,
+  "fiber": 4.4,
+  "fat": 0.3,
+  "kcal": 30,
+  "sugar": 0.9,
+  "sodium": 120,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "fresh lauki only; taste a piece first and never drink it if bitter",
+  "batch": "smoothies"
+ },
+ {
+  "id": "karelajuice",
+  "nameEn": "Karela juice",
+  "nameHi": "करेले का जूस",
+  "aliases": [
+   "karela juice",
+   "bitter gourd juice",
+   "bitter melon juice",
+   "करेला जूस"
+  ],
+  "emoji": "🥒",
+  "group": "drink",
+  "role": "veg",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast"
+  ],
+  "unit": "glass",
+  "measure": "½ glass (100 ml)",
+  "servedG": 100,
+  "recipe": [
+   {
+    "key": "D004",
+    "grams": 80
+   },
+   {
+    "key": "E033",
+    "grams": 10
+   },
+   {
+    "key": "salt",
+    "grams": 0.3
+   }
+  ],
+  "carbs": 2.3,
+  "protein": 1.2,
+  "fiber": 3,
+  "fat": 0.3,
+  "kcal": 22,
+  "sugar": 0.3,
+  "sodium": 127,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "small morning shot; check with your doctor if you take sugar tablets or insulin",
+  "batch": "smoothies"
+ },
+ {
+  "id": "amlajuice",
+  "nameEn": "Amla juice",
+  "nameHi": "आंवला जूस",
+  "aliases": [
+   "amla juice",
+   "amla ras",
+   "gooseberry juice",
+   "indian gooseberry juice",
+   "आंवला रस"
+  ],
+  "emoji": "🟢",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast"
+  ],
+  "unit": "glass",
+  "measure": "½ glass (150 ml)",
+  "servedG": 150,
+  "recipe": [
+   {
+    "key": "E021",
+    "grams": 30
+   },
+   {
+    "key": "G014",
+    "grams": 2
+   },
+   {
+    "key": "salt",
+    "grams": 0.3
+   }
+  ],
+  "carbs": 1.5,
+  "protein": 0.1,
+  "fiber": 2.4,
+  "fat": 0.1,
+  "kcal": 12,
+  "sugar": 1,
+  "sodium": 117,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "2 fresh amla blended with water; no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "abcjuice",
+  "nameEn": "ABC juice (apple-beet-carrot)",
+  "nameHi": "एबीसी जूस (सेब-चुकंदर-गाजर)",
+  "aliases": [
+   "abc juice",
+   "apple beetroot carrot juice",
+   "beetroot juice",
+   "chukandar juice",
+   "gajar juice",
+   "चुकंदर जूस"
+  ],
+  "emoji": "🧃",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (200 ml)",
+  "servedG": 200,
+  "recipe": [
+   {
+    "key": "E001",
+    "grams": 60
+   },
+   {
+    "key": "F001",
+    "grams": 60
+   },
+   {
+    "key": "F002",
+    "grams": 60
+   },
+   {
+    "key": "G014",
+    "grams": 2
+   },
+   {
+    "key": "E033",
+    "grams": 5
+   }
+  ],
+  "carbs": 15.1,
+  "protein": 2,
+  "fiber": 6.2,
+  "fat": 0.8,
+  "kcal": 88,
+  "sugar": 10.4,
+  "sodium": 74,
+  "gi": "med",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "blended and not strained; no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "ashgourdjuice",
+  "nameEn": "Ash gourd juice",
+  "nameHi": "सफ़ेद पेठे का जूस",
+  "aliases": [
+   "ash gourd juice",
+   "white pumpkin juice",
+   "petha juice",
+   "kumbalanga juice",
+   "boodida gummadikaya juice"
+  ],
+  "emoji": "🥒",
+  "group": "drink",
+  "role": "veg",
+  "diet": "veg",
+  "regions": [
+   "south",
+   "pan"
+  ],
+  "slots": [
+   "breakfast"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (200 ml)",
+  "servedG": 200,
+  "recipe": [
+   {
+    "key": "D001",
+    "grams": 200
+   },
+   {
+    "key": "E033",
+    "grams": 5
+   },
+   {
+    "key": "salt",
+    "grams": 0.3
+   }
+  ],
+  "carbs": 5.7,
+  "protein": 1.6,
+  "fiber": 6.7,
+  "fat": 0.3,
+  "kcal": 45,
+  "sugar": 0.5,
+  "sodium": 118,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "",
+  "batch": "smoothies"
+ },
+ {
+  "id": "cucumbercooler",
+  "nameEn": "Cucumber mint cooler",
+  "nameHi": "खीरा पुदीना कूलर",
+  "aliases": [
+   "cucumber juice",
+   "kheera juice",
+   "cucumber mint juice",
+   "kheera pudina",
+   "खीरा जूस"
+  ],
+  "emoji": "🥒",
+  "group": "drink",
+  "role": "veg",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "lunch",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (250 ml)",
+  "servedG": 250,
+  "recipe": [
+   {
+    "key": "D043",
+    "grams": 150
+   },
+   {
+    "key": "G016",
+    "grams": 5
+   },
+   {
+    "key": "E033",
+    "grams": 10
+   },
+   {
+    "key": "salt",
+    "grams": 0.5
+   }
+  ],
+  "carbs": 5.3,
+  "protein": 1.3,
+  "fiber": 3.5,
+  "fat": 0.3,
+  "kcal": 37,
+  "sugar": 0.7,
+  "sodium": 204,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "no sugar; a pinch of black salt and jeera",
+  "batch": "smoothies"
+ },
+ {
+  "id": "tomatocarrotjuice",
+  "nameEn": "Tomato carrot juice",
+  "nameHi": "टमाटर गाजर का जूस",
+  "aliases": [
+   "tomato juice",
+   "tamatar juice",
+   "tomato carrot juice",
+   "टमाटर जूस"
+  ],
+  "emoji": "🍅",
+  "group": "drink",
+  "role": "veg",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (200 ml)",
+  "servedG": 200,
+  "recipe": [
+   {
+    "key": "D076",
+    "grams": 150
+   },
+   {
+    "key": "F002",
+    "grams": 50
+   },
+   {
+    "key": "E033",
+    "grams": 5
+   },
+   {
+    "key": "salt",
+    "grams": 0.5
+   }
+  ],
+  "carbs": 6.8,
+  "protein": 1.8,
+  "fiber": 4.7,
+  "fat": 1,
+  "kcal": 53,
+  "sugar": 3.8,
+  "sodium": 235,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "",
+  "batch": "smoothies"
+ },
+ {
+  "id": "greenapplejuice",
+  "nameEn": "Green apple celery juice",
+  "nameHi": "हरे सेब और सेलेरी का जूस",
+  "aliases": [
+   "green apple juice",
+   "apple celery juice",
+   "celery juice",
+   "apple cucumber juice"
+  ],
+  "emoji": "🍏",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (220 ml)",
+  "servedG": 220,
+  "recipe": [
+   {
+    "key": "E002",
+    "grams": 100
+   },
+   {
+    "key": "D037",
+    "grams": 60
+   },
+   {
+    "key": "D043",
+    "grams": 60
+   },
+   {
+    "key": "E033",
+    "grams": 5
+   }
+  ],
+  "carbs": 14.1,
+  "protein": 1.5,
+  "fiber": 5.1,
+  "fat": 0.8,
+  "kcal": 80,
+  "sugar": 9.1,
+  "sodium": 12,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "blended and not strained",
+  "batch": "smoothies"
+ },
+ {
+  "id": "methiwater",
+  "nameEn": "Methi seed water",
+  "nameHi": "मेथी का पानी",
+  "aliases": [
+   "methi water",
+   "methi pani",
+   "fenugreek water",
+   "soaked methi",
+   "मेथी पानी"
+  ],
+  "emoji": "💧",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (200 ml)",
+  "servedG": 200,
+  "recipe": [
+   {
+    "key": "G026",
+    "grams": 5
+   }
+  ],
+  "carbs": 0.5,
+  "protein": 1.3,
+  "fiber": 2.4,
+  "fat": 0.3,
+  "kcal": 15,
+  "sugar": 0,
+  "sodium": 2,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "1 tsp seeds soaked overnight; values assume the seeds are eaten too",
+  "batch": "smoothies"
+ },
+ {
+  "id": "pomegranatejuice",
+  "nameEn": "Pomegranate juice",
+  "nameHi": "अनार का जूस",
+  "aliases": [
+   "anar juice",
+   "pomegranate juice",
+   "anaar ras",
+   "अनार रस"
+  ],
+  "emoji": "🍷",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (200 ml)",
+  "servedG": 200,
+  "recipe": [
+   {
+    "key": "E055",
+    "grams": 200
+   }
+  ],
+  "carbs": 23.2,
+  "protein": 2.7,
+  "fiber": 5.7,
+  "fat": 0.3,
+  "kcal": 117,
+  "sugar": 21.7,
+  "sodium": 4,
+  "gi": "high",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "fresh juice from about 1 big anar; strained juice has less fiber than shown",
+  "batch": "smoothies"
+ },
+ {
+  "id": "greensmoothie",
+  "nameEn": "Green smoothie (palak-apple)",
+  "nameHi": "ग्रीन स्मूदी (पालक-सेब)",
+  "aliases": [
+   "green smoothie",
+   "spinach smoothie",
+   "palak smoothie",
+   "spinach apple smoothie",
+   "ग्रीन स्मूदी"
+  ],
+  "emoji": "🥬",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (250 ml)",
+  "servedG": 250,
+  "recipe": [
+   {
+    "key": "C033",
+    "grams": 40
+   },
+   {
+    "key": "E002",
+    "grams": 60
+   },
+   {
+    "key": "D043",
+    "grams": 60
+   },
+   {
+    "key": "curd",
+    "grams": 50
+   },
+   {
+    "key": "H014",
+    "grams": 5
+   }
+  ],
+  "carbs": 12.2,
+  "protein": 4.2,
+  "fiber": 5.1,
+  "fat": 4.1,
+  "kcal": 112,
+  "sugar": 7.7,
+  "sodium": 46,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "palak; green apple; cucumber; curd and flaxseed; no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "pineapplesmoothie",
+  "nameEn": "Pineapple spinach smoothie",
+  "nameHi": "अनानास पालक स्मूदी",
+  "aliases": [
+   "pineapple smoothie",
+   "pineapple green smoothie",
+   "ananas smoothie"
+  ],
+  "emoji": "🍍",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (220 ml)",
+  "servedG": 220,
+  "recipe": [
+   {
+    "key": "C033",
+    "grams": 40
+   },
+   {
+    "key": "E053",
+    "grams": 80
+   },
+   {
+    "key": "curd",
+    "grams": 80
+   },
+   {
+    "key": "H014",
+    "grams": 5
+   }
+  ],
+  "carbs": 12.6,
+  "protein": 5,
+  "fiber": 5,
+  "fat": 4.8,
+  "kcal": 123,
+  "sugar": 10.7,
+  "sodium": 57,
+  "gi": "med",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "strawberrysmoothie",
+  "nameEn": "Strawberry smoothie (no sugar)",
+  "nameHi": "स्ट्रॉबेरी स्मूदी (बिना चीनी)",
+  "aliases": [
+   "strawberry smoothie",
+   "strawberry curd smoothie",
+   "berry smoothie"
+  ],
+  "emoji": "🍓",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (220 ml)",
+  "servedG": 220,
+  "recipe": [
+   {
+    "key": "E063",
+    "grams": 100
+   },
+   {
+    "key": "curd",
+    "grams": 100
+   },
+   {
+    "key": "H014",
+    "grams": 5
+   }
+  ],
+  "carbs": 8.6,
+  "protein": 5.4,
+  "fiber": 3.8,
+  "fat": 5.6,
+  "kcal": 114,
+  "sugar": 8.3,
+  "sodium": 49,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "",
+  "batch": "smoothies"
+ },
+ {
+  "id": "jamunsmoothie",
+  "nameEn": "Jamun smoothie",
+  "nameHi": "जामुन स्मूदी",
+  "aliases": [
+   "jamun smoothie",
+   "black plum smoothie",
+   "java plum smoothie"
+  ],
+  "emoji": "🫐",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (200 ml)",
+  "servedG": 200,
+  "recipe": [
+   {
+    "key": "E031",
+    "grams": 80
+   },
+   {
+    "key": "curd",
+    "grams": 100
+   },
+   {
+    "key": "H014",
+    "grams": 5
+   }
+  ],
+  "carbs": 15,
+  "protein": 5.1,
+  "fiber": 3.8,
+  "fat": 5.2,
+  "kcal": 134,
+  "sugar": 10.2,
+  "sodium": 50,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "seeds removed; no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "guavasmoothie",
+  "nameEn": "Guava smoothie",
+  "nameHi": "अमरूद स्मूदी",
+  "aliases": [
+   "guava smoothie",
+   "amrood smoothie",
+   "amrud smoothie"
+  ],
+  "emoji": "🍐",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (220 ml)",
+  "servedG": 220,
+  "recipe": [
+   {
+    "key": "E028",
+    "grams": 100
+   },
+   {
+    "key": "curd",
+    "grams": 100
+   },
+   {
+    "key": "G016",
+    "grams": 3
+   },
+   {
+    "key": "salt",
+    "grams": 0.3
+   }
+  ],
+  "carbs": 9.9,
+  "protein": 5,
+  "fiber": 8.8,
+  "fat": 3.6,
+  "kcal": 109,
+  "sugar": 8.8,
+  "sodium": 166,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "with a little black salt; no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "papayasmoothie",
+  "nameEn": "Papaya smoothie",
+  "nameHi": "पपीता स्मूदी",
+  "aliases": [
+   "papaya smoothie",
+   "papita smoothie",
+   "papaya shake"
+  ],
+  "emoji": "🧡",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (220 ml)",
+  "servedG": 220,
+  "recipe": [
+   {
+    "key": "E049",
+    "grams": 120
+   },
+   {
+    "key": "curd",
+    "grams": 100
+   },
+   {
+    "key": "H014",
+    "grams": 5
+   }
+  ],
+  "carbs": 10.7,
+  "protein": 4.9,
+  "fiber": 4.7,
+  "fat": 5.2,
+  "kcal": 119,
+  "sugar": 9.6,
+  "sodium": 56,
+  "gi": "med",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "oatssmoothie",
+  "nameEn": "Oats apple smoothie",
+  "nameHi": "ओट्स सेब स्मूदी",
+  "aliases": [
+   "oats smoothie",
+   "oat smoothie",
+   "oats apple smoothie",
+   "oats shake"
+  ],
+  "emoji": "🥣",
+  "group": "drink",
+  "role": "grain",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (250 ml)",
+  "servedG": 250,
+  "recipe": [
+   {
+    "key": "oats",
+    "grams": 20
+   },
+   {
+    "key": "E001",
+    "grams": 60
+   },
+   {
+    "key": "L002",
+    "grams": 150
+   },
+   {
+    "key": "H001",
+    "grams": 5
+   }
+  ],
+  "carbs": 26.9,
+  "protein": 8.6,
+  "fiber": 4.2,
+  "fat": 11.3,
+  "kcal": 253,
+  "sugar": 13.4,
+  "sodium": 40,
+  "gi": "med",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "with cinnamon; no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "chiasmoothie",
+  "nameEn": "Chia berry smoothie",
+  "nameHi": "चिया बेरी स्मूदी",
+  "aliases": [
+   "chia smoothie",
+   "chia seed smoothie",
+   "chia pudding drink",
+   "chia seeds"
+  ],
+  "emoji": "🍓",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (220 ml)",
+  "servedG": 220,
+  "recipe": [
+   {
+    "key": "chia",
+    "grams": 10
+   },
+   {
+    "key": "E063",
+    "grams": 80
+   },
+   {
+    "key": "curd",
+    "grams": 100
+   }
+  ],
+  "carbs": 8.2,
+  "protein": 5.9,
+  "fiber": 5.4,
+  "fat": 6.8,
+  "kcal": 128,
+  "sugar": 7.5,
+  "sodium": 49,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "chia soaked 15 minutes; no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "pbsmoothie",
+  "nameEn": "Peanut butter protein smoothie",
+  "nameHi": "पीनट बटर प्रोटीन स्मूदी",
+  "aliases": [
+   "peanut butter smoothie",
+   "protein smoothie",
+   "peanut smoothie",
+   "pb smoothie"
+  ],
+  "emoji": "🥜",
+  "group": "drink",
+  "role": "protein",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (250 ml)",
+  "servedG": 250,
+  "recipe": [
+   {
+    "key": "peanutbutter",
+    "grams": 15
+   },
+   {
+    "key": "L002",
+    "grams": 200
+   },
+   {
+    "key": "oats",
+    "grams": 15
+   },
+   {
+    "key": "H014",
+    "grams": 5
+   }
+  ],
+  "carbs": 21.7,
+  "protein": 12.8,
+  "fiber": 3.6,
+  "fat": 19.4,
+  "kcal": 320,
+  "sugar": 11.5,
+  "sodium": 56,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "unsweetened peanut butter; no banana or sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "badamsmoothie",
+  "nameEn": "Badam smoothie (no sugar)",
+  "nameHi": "बादाम स्मूदी (बिना चीनी)",
+  "aliases": [
+   "almond smoothie",
+   "badam shake",
+   "badam milk smoothie",
+   "almond shake"
+  ],
+  "emoji": "🌰",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (220 ml)",
+  "servedG": 220,
+  "recipe": [
+   {
+    "key": "H001",
+    "grams": 15
+   },
+   {
+    "key": "L002",
+    "grams": 200
+   },
+   {
+    "key": "H014",
+    "grams": 5
+   }
+  ],
+  "carbs": 10.9,
+  "protein": 10.2,
+  "fiber": 3.3,
+  "fat": 19.5,
+  "kcal": 267,
+  "sugar": 10.1,
+  "sodium": 53,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "soaked almonds blended with milk; no sugar",
+  "batch": "smoothies"
+ },
+ {
+  "id": "mixedfruitsmoothie",
+  "nameEn": "Mixed fruit smoothie",
+  "nameHi": "मिक्स फ्रूट स्मूदी",
+  "aliases": [
+   "mixed fruit smoothie",
+   "fruit smoothie",
+   "smoothie",
+   "fruit shake",
+   "mix fruit shake"
+  ],
+  "emoji": "🍹",
+  "group": "drink",
+  "role": "other",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (250 ml)",
+  "servedG": 250,
+  "recipe": [
+   {
+    "key": "E012",
+    "grams": 60
+   },
+   {
+    "key": "E039",
+    "grams": 60
+   },
+   {
+    "key": "E001",
+    "grams": 40
+   },
+   {
+    "key": "L002",
+    "grams": 100
+   },
+   {
+    "key": "sugar",
+    "grams": 5
+   }
+  ],
+  "carbs": 36.2,
+  "protein": 4.4,
+  "fiber": 3.4,
+  "fat": 5.3,
+  "kcal": 217,
+  "sugar": 27.3,
+  "sodium": 27,
+  "gi": "high",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "banana; mango and apple with milk and a little sugar (cafe style)",
+  "batch": "smoothies"
+ },
+ {
   "id": "sevpuri",
   "nameEn": "Sev puri",
   "nameHi": "सेव पूरी",

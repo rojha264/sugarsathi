@@ -1,11 +1,11 @@
 # Food build report
 
-Files: east.csv, nonveg.csv, north.csv, snacks.csv, south.csv, west.csv  
-Dishes built: **471** · with a published carb reference: 39 · outliers (>20%): 18 · invalid rows: 0
+Files: east.csv, nonveg.csv, north.csv, smoothies.csv, snacks.csv, south.csv, west.csv  
+Dishes built: **493** · with a published carb reference: 39 · outliers (>20%): 18 · invalid rows: 0
 
-**By region:** south 128 · north 125 · west 92 · pan 91 · east 63 · northeast 20  
-**By app tab:** dalsabzi 164 · grain 128 · protein 56 · snack 41 · treat 25 · sweet 23 · drink 22 · starter 12  
-**By diet:** veg 405 · nonveg 53 · egg 13
+**By region:** south 129 · north 126 · pan 113 · west 93 · east 63 · northeast 20  
+**By app tab:** dalsabzi 164 · grain 128 · protein 56 · drink 44 · snack 41 · treat 25 · sweet 23 · starter 12  
+**By diet:** veg 427 · nonveg 53 · egg 13
 
 ## Invalid rows (fix before import)
 None.
