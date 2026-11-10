@@ -29,7 +29,11 @@ export async function seedFoods(db: PrismaClient) {
   for (const row of tables.values()) {
     const id = idOf(row.key);
     const values = { carb: row.carb, protein: row.protein, fat: row.fat, fiber: row.fiber, sugar: row.sugar ?? 0, sodium: row.sodium ?? 0, ifctCode: row.code };
-    const source = row.code.startsWith('USDA:') ? `USDA FoodData Central SR Legacy ${row.code.slice(5)} ${row.nameEn}` : `IFCT 2017 ${row.code} ${row.nameEn}`;
+    const source = row.code.startsWith('USDA:')
+      ? `USDA FoodData Central SR Legacy ${row.code.slice(5)} ${row.nameEn}`
+      : row.code.startsWith('LABEL:')
+        ? `Label average, ${row.nameEn}`
+        : `IFCT 2017 ${row.code} ${row.nameEn}`;
     if (known.has(id)) await db.ingredient.update({ where: { id }, data: { sugar: values.sugar, sodium: values.sodium, ifctCode: row.code } });
     else await db.ingredient.create({ data: { id, nameEn: row.nameEn, nameHi: row.nameHi, source, ...values } });
   }

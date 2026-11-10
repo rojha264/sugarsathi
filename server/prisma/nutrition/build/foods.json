@@ -15720,6 +15720,82 @@
   "batch": "smoothies"
  },
  {
+  "id": "seedproteinsmoothie",
+  "nameEn": "Seeds & nuts protein smoothie",
+  "nameHi": "बीज और मेवे वाली प्रोटीन स्मूदी",
+  "aliases": [
+   "protein smoothie with seeds",
+   "seeds smoothie",
+   "nut seed smoothie",
+   "pumpkin seed smoothie",
+   "whey smoothie",
+   "protein shake",
+   "बीज स्मूदी"
+  ],
+  "emoji": "🥤",
+  "group": "drink",
+  "role": "protein",
+  "diet": "veg",
+  "regions": [
+   "pan"
+  ],
+  "slots": [
+   "breakfast",
+   "snack"
+  ],
+  "unit": "glass",
+  "measure": "1 glass (200 ml)",
+  "servedG": 200,
+  "recipe": [
+   {
+    "key": "pumpkinseeds",
+    "grams": 9
+   },
+   {
+    "key": "H020",
+    "grams": 9
+   },
+   {
+    "key": "whey",
+    "grams": 30
+   },
+   {
+    "key": "oats",
+    "grams": 10
+   },
+   {
+    "key": "E012",
+    "grams": 20
+   },
+   {
+    "key": "H001",
+    "grams": 6
+   },
+   {
+    "key": "H021",
+    "grams": 4
+   },
+   {
+    "key": "L002",
+    "grams": 100
+   }
+  ],
+  "carbs": 19.2,
+  "protein": 35.4,
+  "fiber": 3.9,
+  "fat": 22.2,
+  "kcal": 425,
+  "sugar": 9.9,
+  "sodium": 72,
+  "gi": "low",
+  "giValue": null,
+  "giSource": "estimate",
+  "refCarbs": null,
+  "refSource": "",
+  "notes": "1 tbsp each pumpkin and sunflower seeds; 1 scoop unsweetened whey; 2 tbsp oats; ¼ small banana (less banana keeps carbs low); 5 almonds; 2 walnut halves; 100 ml unsweetened milk",
+  "batch": "smoothies"
+ },
+ {
   "id": "sevpuri",
   "nameEn": "Sev puri",
   "nameHi": "सेव पूरी",
