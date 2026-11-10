@@ -11,7 +11,7 @@ import type { Diet } from '@shared/diet';
 import { isOnline } from '@shared/presence';
 
 import { ChatPane, OnlineDot } from '../components/ChatPane';
-import { ForYouPicks } from '../components/ForYouPicks';
+import { MealMenu } from '../components/MealMenu';
 import { KickstartTab } from '../components/KickstartTab';
 import { StageTag, type Lifecycle } from '../components/lifecycle';
 import { SubscriptionTab } from '../components/SubscriptionTab';
@@ -35,6 +35,7 @@ type Snapshot = {
 type Patient = {
   userId: string; type: string; ageGroup: string; diet: string; sex: string | null; heightCm: number | null; weightKg: number | null; tier: string; tierUntil: string | null;
   lifecycle: Lifecycle;
+  _count?: { foodPicks: number; dietPlans: number };
   targetMealCarbs: number; targetProtein: number; targetFiber: number; targetKcal: number | null; targetMode: string; sugarEvery: string;
   user: { name: string; phone: string; lang: string; createdAt: string; lastActiveAt: string | null };
   stats: Stats | null; assignedDietitian: { id: string; name: string } | null;
@@ -553,6 +554,9 @@ export function PatientShow() {
             <Descriptions.Item label="Height / weight">{p.heightCm ?? '–'} cm / {p.weightKg ?? '–'} kg</Descriptions.Item>
             <Descriptions.Item label="Family">{p.circle?.members.filter((m) => m.status === 'active').map((m) => m.name).join(', ') || '–'}</Descriptions.Item>
             <Descriptions.Item label="Stage"><StageTag l={p.lifecycle} /></Descriptions.Item>
+            <Descriptions.Item label="Meal menu">
+              {p._count?.foodPicks ? <Tag color="green">Custom · {p._count.foodPicks} foods</Tag> : p._count?.dietPlans ? <Tag color="blue">From diet plan</Tag> : <Tag>Full food list</Tag>}
+            </Descriptions.Item>
             <Descriptions.Item label="Status"><AttentionTags s={p.stats} /></Descriptions.Item>
             <Descriptions.Item label="App">
               <OnlineDot online={isOnline(p.user.lastActiveAt)} /> {presenceText(isOnline(p.user.lastActiveAt), p.user.lastActiveAt)}
@@ -566,7 +570,7 @@ export function PatientShow() {
               { key: 'm', label: '🍽️ Meals', children: <Meals id={id} /> },
               { key: 'a', label: '💊 Medicine & activity', children: <Activity id={id} /> },
               { key: 'd', label: '🥗 Diet plan', children: <DietPlanTab p={p} id={id} /> },
-              { key: 'f', label: '⭐ For you foods', children: <ForYouPicks id={id} diet={p.diet as Diet} /> },
+              { key: 'f', label: '🍽️ Meal menu', children: <MealMenu id={id} diet={p.diet as Diet} /> },
               { key: 'e', label: '🏃 Exercise plan', children: <ExerciseTab id={id} /> },
               { key: 't', label: '🎯 Targets & plan', children: <TargetsTab p={p} id={id} onSaved={refetch} /> },
               { key: 'c', label: '💬 Chat', children: <ChatPane patientId={id} /> },

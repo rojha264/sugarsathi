@@ -516,7 +516,32 @@ describe('"For you" foods picked by the dietitian', () => {
     const pull = await request(http).get('/sync/pull').set(auth(s.accessToken)).expect(200);
     expect(pull.body.picks).toEqual([{ foodId: 'dal', slots: [], note: '' }, { foodId: 'salad', slots: ['lunch'], note: '' }]);
     const inbox = await request(http).get('/me/inbox').set(auth(s.accessToken)).expect(200);
-    expect(JSON.stringify(inbox.body)).toContain('New foods for you');
+    expect(JSON.stringify(inbox.body)).toContain('Your meal menu is updated');
+    expect(JSON.stringify(inbox.body)).toContain('मेन्यू');
+  });
+
+  it('defaults the meal menu to the active diet plan foods until a custom menu is saved', async () => {
+    const http = app.getHttpServer();
+    const d1 = await loginStaff('dietitian1@glucobuddy.local');
+    const s = await loginPhone(phone(20));
+    await db.patient.update({ where: { userId: s.user.id }, data: { assignedDietitianId: d1.user.id, diet: 'veg' } });
+    const url = `/admin/patients/${s.user.id}/picks`;
+    await db.dietPlan.updateMany({ where: { patientId: s.user.id }, data: { status: 'ended' } });
+    expect((await request(http).get(url).set(auth(d1.accessToken)).expect(200)).body.default).toEqual({ source: 'none', planTitle: null, items: [] });
+
+    await db.dietPlan.create({
+      data: {
+        patientId: s.user.id, title: 'Menu test', status: 'active', dietitianId: d1.user.id, startsOn: new Date(),
+        items: { create: [{ slot: 'lunch', foodId: 'dal' }, { slot: 'dinner', foodId: 'dal' }, { slot: 'breakfast', foodId: 'salad' }] },
+      },
+    });
+    const r = await request(http).get(url).set(auth(d1.accessToken)).expect(200);
+    expect(r.body.data).toEqual([]);
+    expect(r.body.default.source).toBe('plan');
+    expect(r.body.default.planTitle).toBe('Menu test');
+    expect(r.body.default.items).toEqual(expect.arrayContaining([{ foodId: 'dal', slots: ['lunch', 'dinner'] }, { foodId: 'salad', slots: ['breakfast'] }]));
+    const show = await request(http).get(`/admin/patients/${s.user.id}`).set(auth(d1.accessToken)).expect(200);
+    expect(show.body._count).toEqual({ foodPicks: 0, dietPlans: 1 });
   });
 });
 

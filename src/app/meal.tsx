@@ -26,6 +26,7 @@ import { chaknaFor, hasAlcohol, hasHypoMeds, type DrinkContext } from '@/logic/a
 import { applyTip, coach, recentSugar, type TipAction, type Vars } from '@/logic/coach';
 import { addDays } from '@/logic/ids';
 import { addToBasket, basketOf, defaultSlot, loggedMeal, MAX_QTY, removeFromBasket, totals, type Basket } from '@/logic/meal';
+import { menuFor } from '@/logic/menu';
 import { suggestFor } from '@/logic/usual';
 import { plateCheck } from '@/logic/plate';
 import { careFlags } from '@/logic/care';
@@ -114,6 +115,10 @@ export default function MealScreen() {
   const allPicks = useCloud((s) => s.picks);
   const dietitian = useCloud((s) => s.dietitian);
   const picks = cur === 'me' ? allPicks : NO_PICKS;
+  const planItems = useCloud((s) => s.plans.diet?.items);
+  // The meal menu: the dietitian's list, else this person's diet plan foods. "Ate something else?" opens everything.
+  const menu = menuFor(slot, picks, cur === 'me' ? planItems : null, (id) => !!FOOD_BY_ID[id] && allowed(FOOD_BY_ID[id], personDiet));
+  const [browseAll, setBrowseAll] = useState(false);
   const pickedFor = (sl: MealSlot) => picks.filter((pk) => (!pk.slots.length || pk.slots.includes(sl)) && FOOD_BY_ID[pk.foodId] && allowed(FOOD_BY_ID[pk.foodId], personDiet));
   // Open on "For you" when the dietitian picked foods or there are usual ones; high sugar opens "Eat first" instead.
   const [tab, setTab] = useState<Tab>(() => (recentHigh ? 'starter' : pickedFor(slot).length || suggestFor(p, slot, () => true).length ? 'mine' : 'grain'));
@@ -231,7 +236,10 @@ export default function MealScreen() {
   const pickedIds = new Set(picked.map((pk) => pk.foodId));
   // Usual foods below the dietitian's picks, without repeating them.
   const mine = suggestFor(p, slot, (id) => !!FOOD_BY_ID[id] && visible(FOOD_BY_ID[id]) && !pickedIds.has(id)).map((id) => FOOD_BY_ID[id]);
-  const showPicks = !q && !onlyKind && tab === 'mine' && picked.length > 0;
+  const menuFoods = menu.foodIds.map((id) => FOOD_BY_ID[id]).filter(visible);
+  // High sugar opens "Eat first" instead; the menu stays one tap away.
+  const menuView = !q && !browseAll && menuFoods.length > 0 && !(recentHigh && tab === 'starter');
+  const showPicks = !menuView && !q && !onlyKind && tab === 'mine' && picked.length > 0;
   const shown = q
     ? searchRank(FOODS.filter(visible), query, searchFields)
     : onlyKind
@@ -254,7 +262,12 @@ export default function MealScreen() {
   return (
     <Screen title={t('mealT')} back>
       <DayChips value={daysAgo} onChange={setDaysAgo} />
-      <ChipRow<MealSlot> value={slot} options={['breakfast', 'lunch', 'dinner', 'snack']} onChange={setSlot} label={tt2.fieldName} />
+      <ChipRow<MealSlot> value={slot} options={['breakfast', 'lunch', 'dinner', 'snack']} onChange={(s) => {
+          setSlot(s);
+          setBrowseAll(false);
+        }}
+        label={tt2.fieldName}
+      />
       {logged ? (
         <Banner tone="info">
           <Txt size={15}>✅ {t('eAlready', { slot: slotName, time: dateFormat(lang, { hour: 'numeric', minute: '2-digit' }).format(new Date(logged.createdAt)) })}</Txt>
@@ -377,8 +390,22 @@ export default function MealScreen() {
         }}
       />
 
-      {!q ? (
+      {!q && !menuView ? (
         <>
+          {menuFoods.length ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setBrowseAll(false);
+                setTab('mine');
+              }}
+              hitSlop={6}
+              style={{ marginBottom: 8 }}>
+              <Txt size={16} weight="bold" color="leaf">
+                ← {t('menuBack', { slot: slotName })}
+              </Txt>
+            </Pressable>
+          ) : null}
           {thalis.length ? (
             <ThaliPicker
               thalis={thalis}
@@ -400,7 +427,29 @@ export default function MealScreen() {
         </>
       ) : null}
 
-      {drinksLocked ? (
+      {menuView ? (
+        <Card style={{ borderColor: c.leaf, borderWidth: 2 }}>
+          <Txt size={17} weight="bold">
+            🍽️ {t('menuTitle', { slot: slotName })}
+          </Txt>
+          <Txt size={14} color="mute" style={{ marginBottom: 8 }}>
+            {menu.source === 'plan' ? t('menuFromPlan') : dietitian ? t('pickedBy', { n: dietitian }) : t('pickedByYours')}
+          </Txt>
+          {grid(menuFoods)}
+          {menuFoods
+            .filter((f) => menu.notes[f.id])
+            .map((f) => (
+              <Txt key={f.id} size={14} style={{ marginTop: 4 }}>
+                {f.e}{' '}
+                <Txt size={14} weight="bold">
+                  {f.n[lang]}:
+                </Txt>{' '}
+                {menu.notes[f.id]}
+              </Txt>
+            ))}
+          <Btn small kind="alt" label={`➕ ${t('menuOther')}`} onPress={() => setBrowseAll(true)} style={{ marginTop: 12 }} />
+        </Card>
+      ) : drinksLocked ? (
         <Card>
           <Txt weight="bold" style={{ marginBottom: 4 }}>
             {p.name ? t('alcShow', { n: p.name }) : t('alcShowMe')}
@@ -447,7 +496,7 @@ export default function MealScreen() {
         </Txt>
       )}
 
-      {!q && !onlyKind && tab === 'drinks' && showDrinks ? (
+      {!menuView && !q && !onlyKind && tab === 'drinks' && showDrinks ? (
         <>
           <Txt weight="bold" style={{ marginBottom: 6 }}>
             🫧 {t('mixWith')}

@@ -102,6 +102,8 @@ export class PatientsController {
           circle: { include: { members: { select: { name: true, status: true } } } },
           subscriptions: { orderBy: { endsAt: 'desc' }, take: 1, include: { plan: true } },
           enrollments: { orderBy: { createdAt: 'desc' }, take: 1, select: { status: true, startsOn: true, riskReasons: true, result: true } },
+          // Meal menu source for the header: custom list, else the active diet plan.
+          _count: { select: { foodPicks: true, dietPlans: { where: { status: 'active' } } } },
         },
       }),
       buildDay(this.db, id),

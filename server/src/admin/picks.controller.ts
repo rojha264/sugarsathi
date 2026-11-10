@@ -8,12 +8,15 @@ import { CurrentUser, Roles, type AuthUser } from '../common/auth.decorators';
 import { PrismaService } from '../common/prisma.service';
 import { NotificationsService } from '../notify/notifications.controller';
 
-const MAX_PICKS = 30;
+const MAX_PICKS = 80;
 const MAX_NOTE = 120;
 
 type PickIn = { foodId: string; slots?: string[]; note?: string };
 
-/** "For you" foods: what a dietitian recommends for one patient, shown first on the app's meal screen. */
+/**
+ * The patient's meal menu: the foods the app's meal screen opens with, per meal. With none saved, the
+ * active diet plan's foods are the default (same rule as src/logic/menu.ts in the app).
+ */
 @ApiTags('patients (admin)')
 @ApiBearerAuth()
 @Roles('DIETITIAN', 'OWNER')
@@ -29,7 +32,18 @@ export class PicksController {
   async list(@CurrentUser() u: AuthUser, @Param('id') id: string) {
     await this.access.assertStaffCanSee(u, id);
     const rows = await this.db.foodPick.findMany({ where: { patientId: id }, orderBy: { sort: 'asc' }, include: { addedBy: { select: { name: true } } } });
-    return { data: rows.map((r) => ({ foodId: r.foodId, slots: r.slots, note: r.note, addedBy: r.addedBy?.name ?? null, updatedAt: r.updatedAt })) };
+    const plan = await this.db.dietPlan.findFirst({
+      where: { patientId: id, status: 'active' },
+      orderBy: { createdAt: 'desc' },
+      select: { title: true, items: { select: { foodId: true, slot: true } } },
+    });
+    const bySlot = new Map<string, Set<string>>();
+    for (const i of plan?.items ?? []) bySlot.set(i.foodId, (bySlot.get(i.foodId) ?? new Set()).add(i.slot));
+    return {
+      data: rows.map((r) => ({ foodId: r.foodId, slots: r.slots, note: r.note, addedBy: r.addedBy?.name ?? null, updatedAt: r.updatedAt })),
+      // What the app shows while the list above is empty.
+      default: bySlot.size ? { source: 'plan', planTitle: plan!.title, items: [...bySlot].map(([foodId, s]) => ({ foodId, slots: [...s] })) } : { source: 'none', planTitle: null, items: [] },
+    };
   }
 
   /** Replaces the whole list (order = app order). Foods the patient does not eat are refused, never silently shown. */
@@ -61,9 +75,9 @@ export class PicksController {
       const n = await this.db.notification.create({
         data: {
           senderId: u.id, kind: 'picks', deeplink: '/meal', audience: { userIds: [id] }, recipients: 1, receipts: { create: [{ userId: id }] },
-          titleEn: '⭐ New foods for you', titleHi: '⭐ आपके लिए नया खाना',
-          bodyEn: `Your dietitian picked ${added} food${added > 1 ? 's' : ''} for you. See them under "For you" when you log a meal.`,
-          bodyHi: `आपके डाइटीशियन ने आपके लिए ${added} चीज़ें चुनी हैं। खाना जोड़ते समय "आपके लिए" में देखिए।`,
+          titleEn: '🍽️ Your meal menu is updated', titleHi: '🍽️ आपका खाने का मेन्यू अपडेट हुआ',
+          bodyEn: `Your dietitian added ${added} food${added > 1 ? 's' : ''} to your menu. You will see them when you log a meal.`,
+          bodyHi: `आपके डाइटीशियन ने आपके मेन्यू में ${added} चीज़ें जोड़ी हैं। खाना जोड़ते समय दिखेंगी।`,
         },
       });
       await this.notifications.deliver(n.id);

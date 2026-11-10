@@ -1,5 +1,5 @@
 import { ArrowDownOutlined, ArrowUpOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Alert, App, AutoComplete, Button, Card, Checkbox, Col, Empty, Row, Select, Space, Table, Tag, Tooltip, Typography } from 'antd';
+import { Alert, App, AutoComplete, Button, Card, Checkbox, Col, Empty, Popconfirm, Row, Select, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -12,16 +12,20 @@ import { usable, useFoods, type Food } from './useFoods';
 import { bilingual, foodSearch } from '../lib/search';
 
 type Pick = { foodId: string; slots: MealSlot[]; note: string };
-const MAX = 30;
-/** One portion over this many grams of carbs gets a gentle warning; a "For you" food should help, not spike. */
+const MAX = 80;
+/** One portion over this many grams of carbs gets a gentle warning; a menu food should help, not spike. */
 const HEAVY_PORTION = Math.round(MEAL_CARBS.good / 2);
 const NOTE_IDEAS = ['Fiber keeps sugar steady', 'Good protein, keeps you full', 'Eat this before roti or rice', 'Better than white rice', 'Low sugar load'];
 
+type Default = { source: 'plan' | 'none'; planTitle: string | null; items: { foodId: string; slots: MealSlot[] }[] };
+type Template = { id: string; title: string; diet: string; items: { foodId: string; slot: MealSlot }[] };
+
 /**
- * The patient's "For you" tab on the app's meal screen: foods this dietitian recommends, per meal,
- * each with a short reason. Shows what the patient actually eats so picks can be reviewed against it.
+ * The patient's meal menu: the only foods the app's meal screen opens with, per meal, each with an
+ * optional reason ("Ate something else?" still opens the full list). With nothing saved, the active
+ * diet plan's foods are the default. Shows what the patient actually eats so the menu can be reviewed against it.
  */
-export function ForYouPicks({ id, diet }: { id: string; diet: Diet }) {
+export function MealMenu({ id, diet }: { id: string; diet: Diet }) {
   const { message } = App.useApp();
   const foods = useFoods();
   const byId = useMemo(() => new Map(foods.map((f) => [f.id, f])), [foods]);
@@ -32,11 +36,14 @@ export function ForYouPicks({ id, diet }: { id: string; diet: Diet }) {
   const [error, setError] = useState<string | null>(null);
   const [usual, setUsual] = useState<{ foodId: string; times: number }[]>([]);
   const [planFoods, setPlanFoods] = useState<{ foodId: string; slot: MealSlot }[]>([]);
+  const [fallback, setFallback] = useState<Default | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
 
   const load = useCallback(async () => {
-    const r = await api<{ data: Pick[] }>(`/admin/patients/${id}/picks`);
-    setPicks(r.data);
-    setSaved(JSON.stringify(r.data));
+    const r = await api<{ data: Pick[]; default: Default }>(`/admin/patients/${id}/picks`);
+    setPicks(r.data.map(({ foodId, slots, note }) => ({ foodId, slots, note })));
+    setSaved(JSON.stringify(r.data.map(({ foodId, slots, note }) => ({ foodId, slots, note }))));
+    setFallback(r.default);
   }, [id]);
   useEffect(() => {
     load();
@@ -47,20 +54,30 @@ export function ForYouPicks({ id, diet }: { id: string; diet: Diet }) {
       setUsual([...n.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([foodId, times]) => ({ foodId, times })));
     });
     api<{ status: string; items: { foodId: string; slot: MealSlot }[] }[]>(`/admin/diet-plans?patientId=${id}`).then((plans) => setPlanFoods(plans.find((p) => p.status === 'active')?.items ?? []));
+    api<{ data: Template[] }>('/admin/diet-templates').then((r) => setTemplates(r.data));
   }, [id, load]);
 
   const dirty = picks !== null && JSON.stringify(picks) !== saved;
   const fits = (f?: Food) => !!f && usable(f) && eats(diet, f.diet as Diet);
   const add = (foodId: string, slots: MealSlot[] = []) =>
     setPicks((cur) => (cur && !cur.some((p) => p.foodId === foodId) && cur.length < MAX ? [...cur, { foodId, slots, note: '' }] : cur));
-  const fromPlan = () => {
+  /** Adds foods with the meals they are planned for, skipping ones already on the menu. */
+  const addItems = (items: { foodId: string; slot: MealSlot }[]) => {
     const bySlot = new Map<string, Set<MealSlot>>();
-    for (const i of planFoods) if (fits(byId.get(i.foodId))) bySlot.set(i.foodId, (bySlot.get(i.foodId) ?? new Set()).add(i.slot));
+    for (const i of items) if (fits(byId.get(i.foodId))) bySlot.set(i.foodId, (bySlot.get(i.foodId) ?? new Set()).add(i.slot));
     setPicks((cur) => {
       const have = new Set((cur ?? []).map((p) => p.foodId));
       const extra = [...bySlot.entries()].filter(([f]) => !have.has(f)).map(([foodId, s]) => ({ foodId, slots: [...s], note: '' }));
       return [...(cur ?? []), ...extra].slice(0, MAX);
     });
+  };
+  const fromPlan = () => addItems(planFoods);
+  const fromTemplate = (tid: string) => {
+    const tpl = templates.find((x) => x.id === tid);
+    if (!tpl) return;
+    const skipped = new Set(tpl.items.filter((i) => !fits(byId.get(i.foodId))).map((i) => i.foodId)).size;
+    addItems(tpl.items);
+    message.info(`Added foods from "${tpl.title}"${skipped ? `; ${skipped} not ${DIETS[diet]} or not in the catalog were skipped` : ''}. Review, then save.`);
   };
   const patch = (foodId: string, p: Partial<Pick>) => setPicks((cur) => cur!.map((x) => (x.foodId === foodId ? { ...x, ...p } : x)));
   const move = (i: number, d: -1 | 1) =>
@@ -75,7 +92,13 @@ export function ForYouPicks({ id, diet }: { id: string; diet: Diet }) {
     setError(null);
     try {
       const r = await api<{ added: number; notified: boolean }>(`/admin/patients/${id}/picks`, { method: 'PUT', json: { picks, notify } });
-      message.success(r.notified ? `Saved. The patient was told about ${r.added} new food${r.added > 1 ? 's' : ''}.` : 'Saved. The app shows it on the next sync.');
+      message.success(
+        !picks?.length
+          ? 'Saved. The app goes back to the default menu on the next sync.'
+          : r.notified
+            ? `Saved. The patient was told about ${r.added} new food${r.added > 1 ? 's' : ''}.`
+            : 'Saved. The app shows it on the next sync.',
+      );
       await load();
     } catch (e) {
       const code = (e as Error).message;
@@ -89,17 +112,32 @@ export function ForYouPicks({ id, diet }: { id: string; diet: Diet }) {
   const options = foods
     .filter((f) => fits(f) && f.group !== 'alcohol' && f.group !== 'mixer' && !picks.some((p) => p.foodId === f.id))
     .map((f) => ({ value: f.id, label: `${f.emoji} ${f.nameEn} · ${f.nameHi}`, search: foodSearch(f), f }));
-  const perSlot = MEAL_SLOTS.map((s) => ({ s, n: picks.filter((p) => !p.slots.length || p.slots.includes(s)).length }));
+  const custom = picks.length > 0;
+  // What the app opens with per meal: this list, else the plan default, else the full food list.
+  const perSlot = MEAL_SLOTS.map((s) => ({
+    s,
+    ids: custom
+      ? picks.filter((p) => !p.slots.length || p.slots.includes(s)).map((p) => p.foodId)
+      : (fallback?.items ?? []).filter((i) => i.slots.includes(s)).map((i) => i.foodId),
+  }));
 
   return (
     <Row gutter={16}>
       <Col xs={24} xl={16}>
         <Space direction="vertical" style={{ width: '100%' }}>
           <Alert
-            type="info"
+            type={custom ? 'success' : 'info'}
             showIcon
-            message={'These foods appear first in the patient\'s "⭐ For you" tab when they log a meal, above their usual foods.'}
-            description={`Only ${DIETS[diet]} foods can be added. Leave "Meals" empty to show a food at every meal.`}
+            message={
+              custom ? (
+                <span><Tag color="green">Custom menu</Tag>{picks.length} food{picks.length > 1 ? 's' : ''}. The app opens each meal with only these foods.</span>
+              ) : fallback?.source === 'plan' ? (
+                <span><Tag>Default</Tag>From the diet plan “{fallback.planTitle}” ({fallback.items.length} foods). Add foods below to make a custom menu.</span>
+              ) : (
+                <span><Tag>Default</Tag>Full food list: no diet plan and no menu yet. Add foods below to make a custom menu.</span>
+              )
+            }
+            description={`The patient can still tap "Ate something else?" or search to log any food. Only ${DIETS[diet]} foods can be added. Leave "Meals" empty to show a food at every meal.`}
           />
           {error ? <Alert type="error" showIcon message={error} /> : null}
           <Space wrap style={{ width: '100%' }}>
@@ -121,13 +159,29 @@ export function ForYouPicks({ id, diet }: { id: string; diet: Diet }) {
             <Tooltip title={planFoods.length ? 'Adds the foods of their active diet plan, with the meals they are planned for' : 'No active diet plan'}>
               <Button onClick={fromPlan} disabled={!planFoods.length}>➕ From diet plan</Button>
             </Tooltip>
+            <Select
+              value={null}
+              style={{ minWidth: 220 }}
+              placeholder="📋 Start from template"
+              disabled={!templates.length}
+              options={templates.map((x) => ({ value: x.id, label: `${x.title} · ${x.items.length} items` }))}
+              onSelect={(v) => v && fromTemplate(v)}
+            />
+            <Popconfirm
+              title="Reset to the default menu?"
+              description={fallback?.source === 'plan' ? 'The app will show the diet plan foods again.' : 'The app will show the full food list again.'}
+              okText="Reset"
+              onConfirm={() => setPicks([])}
+              disabled={!custom}>
+              <Button danger disabled={!custom}>↺ Reset to default</Button>
+            </Popconfirm>
           </Space>
           <Table
             size="small"
             rowKey="foodId"
             pagination={false}
             dataSource={picks}
-            locale={{ emptyText: <Empty description="No foods yet. The app shows only the patient's usual foods." /> }}
+            locale={{ emptyText: <Empty description={fallback?.source === 'plan' ? 'No custom menu. The app uses the diet plan foods (see right).' : 'No custom menu. The app shows the full food list.'} /> }}
             columns={[
               {
                 title: 'Food',
@@ -182,7 +236,7 @@ export function ForYouPicks({ id, diet }: { id: string; diet: Diet }) {
             ]}
           />
           <Space wrap>
-            <Button type="primary" disabled={!dirty} loading={saving} onClick={save}>Save "For you" foods</Button>
+            <Button type="primary" disabled={!dirty} loading={saving} onClick={save}>Save meal menu</Button>
             <Checkbox checked={notify} onChange={(e) => setNotify(e.target.checked)}>Tell the patient about new foods (inbox + push)</Checkbox>
             {dirty ? <Typography.Text type="warning">Unsaved changes</Typography.Text> : null}
           </Space>
@@ -190,11 +244,17 @@ export function ForYouPicks({ id, diet }: { id: string; diet: Diet }) {
       </Col>
       <Col xs={24} xl={8}>
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Card size="small" title="📱 What the patient sees per meal">
-            {perSlot.map(({ s, n }) => (
-              <div key={s} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                <span>{SLOT_LABEL[s]}</span>
-                <Typography.Text type={n ? undefined : 'secondary'}>{n ? `${n} food${n > 1 ? 's' : ''}` : 'only their usual foods'}</Typography.Text>
+          <Card size="small" title="📱 What the patient sees per meal" extra={custom ? <Tag color="green">Custom</Tag> : <Tag>Default</Tag>}>
+            {perSlot.map(({ s, ids }) => (
+              <div key={s} style={{ padding: '4px 0', opacity: custom ? 1 : 0.7 }}>
+                <Typography.Text strong>{SLOT_LABEL[s]}</Typography.Text>
+                <div>
+                  {ids.length ? (
+                    ids.map((fid) => <Tag key={fid} style={{ marginTop: 4 }}>{byId.get(fid)?.emoji} {byId.get(fid)?.nameEn ?? fid}</Tag>)
+                  ) : (
+                    <Typography.Text type="secondary">Full food list</Typography.Text>
+                  )}
+                </div>
               </div>
             ))}
           </Card>
@@ -209,7 +269,7 @@ export function ForYouPicks({ id, diet }: { id: string; diet: Diet }) {
                     <span>{f.emoji} {f.nameEn} <Typography.Text type="secondary">×{u.times}</Typography.Text></span>
                     <Space size={4}>
                       <Typography.Text type={f.carbs > HEAVY_PORTION ? 'warning' : 'secondary'} style={{ fontSize: 12 }}>{f.carbs} g</Typography.Text>
-                      {picked ? <Tag color="green">picked</Tag> : fits(f) ? <Button size="small" onClick={() => add(f.id)}>+ Pick</Button> : null}
+                      {picked ? <Tag color="green">on menu</Tag> : fits(f) ? <Button size="small" onClick={() => add(f.id)}>+ Add</Button> : null}
                     </Space>
                   </div>
                 );
