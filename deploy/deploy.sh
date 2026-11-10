@@ -15,6 +15,8 @@ REMOTE=sugarsaathi
 COMPOSE="docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env"
 
 # Behind a TLS-inspecting proxy (Zscaler), let the build trust its root CA (not stored in the image).
+# The colima builder trusts the proxy's CA; use it when present unless BUILDER says otherwise.
+if [ -z "$BUILDER" ] && docker buildx inspect colima >/dev/null 2>&1; then BUILDER=colima; fi
 CA="${BUILDER:+--builder $BUILDER}"
 [ -s certs/extra-ca.pem ] && CA="$CA --secret id=ca,src=certs/extra-ca.pem"
 
